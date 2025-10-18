@@ -27,28 +27,34 @@ const InvoicePreview = () => {
   const grandTotal = totalTaxableValue + totalTax;
 
   const numberToWords = (num: number): string => {
-    // Simple implementation - you can expand this
     const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
     const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
     const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
     
     if (num === 0) return "Zero";
-    if (num < 10) return units[num];
-    if (num < 20) return teens[num - 10];
-    if (num < 100) return tens[Math.floor(num / 10)] + " " + units[num % 10];
-    if (num < 1000) return units[Math.floor(num / 100)] + " Hundred " + numberToWords(num % 100);
-    if (num < 100000) return numberToWords(Math.floor(num / 1000)) + " Thousand " + numberToWords(num % 1000);
-    return "Amount exceeds conversion limit";
+    
+    const convertBelow1000 = (n: number): string => {
+      if (n === 0) return "";
+      if (n < 10) return units[n];
+      if (n < 20) return teens[n - 10];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + units[n % 10] : "");
+      return units[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " " + convertBelow1000(n % 100) : "");
+    };
+    
+    if (num < 1000) return convertBelow1000(num);
+    if (num < 100000) return convertBelow1000(Math.floor(num / 1000)) + " Thousand " + convertBelow1000(num % 1000);
+    if (num < 10000000) return convertBelow1000(Math.floor(num / 100000)) + " Lakh " + convertBelow1000(num % 100000);
+    return convertBelow1000(Math.floor(num / 10000000)) + " Crore " + convertBelow1000(num % 10000000);
   };
 
-  const amountInWords = numberToWords(Math.floor(grandTotal)) + " Rupees Only";
+  const amountInWords = numberToWords(Math.floor(grandTotal)).trim() + " Rupees Only";
 
   return (
-    <div className="min-h-screen bg-section-bg">
+    <div className="min-h-screen bg-white">
       {/* Action Bar - Hidden in Print */}
-      <div className="no-print sticky top-0 z-10 bg-background border-b border-border shadow-sm">
+      <div className="no-print sticky top-0 z-10 bg-white border-b-2 border-black shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+          <Button variant="outline" onClick={() => navigate("/")} className="gap-2 border-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Form
           </Button>
@@ -60,249 +66,357 @@ const InvoicePreview = () => {
         </div>
       </div>
 
-      {/* Invoice Content */}
+      {/* Invoice Content - Matching Excel A1:O40 Structure */}
       <div className="container mx-auto px-4 py-8">
-        <div ref={invoiceRef} className="bg-background shadow-lg mx-auto" style={{ maxWidth: "210mm" }}>
-          {/* Original Invoice */}
-          <div className="p-8 page-break">
-            {/* Header */}
-            <div className="border-2 border-foreground p-4 mb-4">
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-xl font-bold text-accent">ORIGINAL</div>
+        <div ref={invoiceRef} className="bg-white shadow-lg mx-auto border-2 border-black" style={{ maxWidth: "210mm", fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+          
+          {/* Row 1: ORIGINAL Label - Excel A1:O1 */}
+          <div className="bg-[#2F5061] text-white text-center py-3 border-b-2 border-black">
+            <span className="text-xl font-bold">ORIGINAL</span>
+          </div>
+
+          {/* Row 2: Company Name - Excel A2:O2 */}
+          <div className="bg-[#2F5061] text-white text-center border-b-2 border-black">
+            <h1 className="text-4xl font-bold py-3" style={{ fontSize: "36px" }}>{invoiceData.companyName}</h1>
+          </div>
+
+          {/* Row 3: Company Address - Excel A3:O3 */}
+          <div className="bg-[#F5F5F5] text-center py-3 border-b border-black">
+            <p className="text-base" style={{ fontSize: "16px" }}>{invoiceData.companyAddress}</p>
+          </div>
+
+          {/* Row 4: Company GSTIN - Excel A4:O4 */}
+          <div className="bg-[#F5F5F5] text-center py-3 border-b border-black">
+            <p className="text-base" style={{ fontSize: "16px" }}>GSTIN: {invoiceData.companyGSTIN}</p>
+          </div>
+
+          {/* Row 5: Company Email - Excel A5:O5 */}
+          <div className="bg-[#F5F5F5] text-center py-3 border-b-2 border-black">
+            <p className="text-sm" style={{ fontSize: "14px" }}>Email: {invoiceData.companyEmail}</p>
+          </div>
+
+          {/* Row 6: TAX-INVOICE Header - Excel A6:O6 */}
+          <div className="grid grid-cols-15 border-b-2 border-black" style={{ height: "50px" }}>
+            <div className="col-span-10 bg-[#F0F0F0] text-center flex items-center justify-center border-r border-black">
+              <h2 className="text-2xl font-bold">TAX-INVOICE</h2>
+            </div>
+            <div className="col-span-5 bg-[#FAFAFA] text-center text-xs leading-tight flex items-center justify-center px-2">
+              <div>
+                Original for Recipient<br/>
+                Duplicate for Supplier/Transporter<br/>
+                Triplicate for Supplier
               </div>
-              <div className="text-center mb-2">
-                <h1 className="text-2xl font-bold text-invoice-header mb-1">{invoiceData.companyName}</h1>
-                <p className="text-sm">{invoiceData.companyAddress}</p>
-                <p className="text-sm">GSTIN: {invoiceData.companyGSTIN}</p>
-                <p className="text-sm">Email: {invoiceData.companyEmail}</p>
+            </div>
+          </div>
+
+          {/* Rows 7-10: Invoice Metadata Grid - Excel A7:O10 */}
+          <div className="bg-[#F5F5F5]">
+            {/* Row 7 */}
+            <div className="grid grid-cols-15 border-b border-black" style={{ height: "35px" }}>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Invoice No.</div>
+              <div className="col-span-1 px-2 flex items-center justify-center border-r border-black font-bold text-[#DC143C]">{invoiceData.invoiceNumber}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>Transport Mode</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.transportMode}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Challan No.</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.challanNumber}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Sale Type</div>
+              <div className="col-span-2 px-2 flex items-center justify-center font-bold text-[#DC143C]" style={{ fontSize: "16px" }}>{invoiceData.saleType}</div>
+            </div>
+
+            {/* Row 8 */}
+            <div className="grid grid-cols-15 border-b border-black" style={{ height: "35px" }}>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Invoice Date</div>
+              <div className="col-span-1 px-2 flex items-center border-r border-black font-bold">{invoiceData.invoiceDate}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>Vehicle Number</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.vehicleNumber}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Transporter Name</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.transporterName}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>Invoice Type</div>
+              <div className="col-span-2 px-2 flex items-center justify-center">{invoiceData.invoiceType}</div>
+            </div>
+
+            {/* Row 9 */}
+            <div className="grid grid-cols-15 border-b border-black" style={{ height: "35px" }}>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>State</div>
+              <div className="col-span-1 px-2 flex items-center border-r border-black text-xs">{invoiceData.companyState}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>Date of Supply</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.dateOfSupply}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>L.R Number</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.lrNumber}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>Reverse Charge</div>
+              <div className="col-span-2 px-2 flex items-center justify-center">{invoiceData.reverseCharge}</div>
+            </div>
+
+            {/* Row 10 */}
+            <div className="grid grid-cols-15 border-b-2 border-black" style={{ height: "35px" }}>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>State Code</div>
+              <div className="col-span-1 px-2 flex items-center border-r border-black">{invoiceData.companyStateCode}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>Place of Supply</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.placeOfSupply}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "14px" }}>P.O Number</div>
+              <div className="col-span-2 px-2 flex items-center border-r border-black">{invoiceData.poNumber}</div>
+              <div className="col-span-2 font-bold px-2 flex items-center border-r border-black" style={{ fontSize: "12px" }}>E-Way Bill No.</div>
+              <div className="col-span-2 px-2 flex items-center justify-center text-gray-500">{invoiceData.eWayBillNumber}</div>
+            </div>
+          </div>
+
+          {/* Row 11: Party Details Headers - Excel A11:O11 */}
+          <div className="grid grid-cols-2 border-b border-black bg-[#F5F5F5]" style={{ height: "45px" }}>
+            <div className="font-bold text-center flex items-center justify-center border-r-2 border-black" style={{ fontSize: "16px" }}>
+              Details of Receiver (Billed to)
+            </div>
+            <div className="font-bold text-center flex items-center justify-center" style={{ fontSize: "16px" }}>
+              Details of Consignee (Shipped to)
+            </div>
+          </div>
+
+          {/* Rows 12-16: Party Details Content - Excel A12:O16 */}
+          <div className="grid grid-cols-2 bg-[#F5F5F5] border-b-2 border-black">
+            <div className="border-r-2 border-black">
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold" style={{ fontSize: "14px" }}>Name:</div>
+                <div className="col-span-6">{invoiceData.receiverName}</div>
               </div>
-              <div className="text-center border-t-2 border-b-2 border-foreground py-2 my-2">
-                <h2 className="text-xl font-bold">TAX-INVOICE</h2>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold" style={{ fontSize: "14px" }}>Address:</div>
+                <div className="col-span-6">{invoiceData.receiverAddress}</div>
               </div>
-              <div className="text-xs flex justify-around">
-                <span>Original for Recipient</span>
-                <span>Duplicate for Supplier/Transporter</span>
-                <span>Triplicate for Supplier</span>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold" style={{ fontSize: "14px" }}>GSTIN:</div>
+                <div className="col-span-6">{invoiceData.receiverGSTIN}</div>
+              </div>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold" style={{ fontSize: "14px" }}>State:</div>
+                <div className="col-span-6">{invoiceData.receiverState}</div>
+              </div>
+              <div className="grid grid-cols-8 px-2 py-2">
+                <div className="col-span-2 font-bold" style={{ fontSize: "14px" }}>State Code:</div>
+                <div className="col-span-6">{invoiceData.receiverStateCode}</div>
+              </div>
+            </div>
+            <div>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold text-xs">Name:</div>
+                <div className="col-span-6">{invoiceData.consigneeName}</div>
+              </div>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold text-xs">Address:</div>
+                <div className="col-span-6">{invoiceData.consigneeAddress}</div>
+              </div>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold text-xs">GSTIN:</div>
+                <div className="col-span-6">{invoiceData.consigneeGSTIN}</div>
+              </div>
+              <div className="grid grid-cols-8 border-b border-black px-2 py-2">
+                <div className="col-span-2 font-bold text-xs">State:</div>
+                <div className="col-span-6">{invoiceData.consigneeState}</div>
+              </div>
+              <div className="grid grid-cols-8 px-2 py-2">
+                <div className="col-span-2 font-bold text-xs">State Code:</div>
+                <div className="col-span-6">{invoiceData.consigneeStateCode}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rows 17-18: Items Table Header (2-row structure) - Excel A17:O18 */}
+          <div className="bg-[#E6E6E6]">
+            <div className="grid grid-cols-15 text-xs font-bold text-center border-b border-black" style={{ height: "40px" }}>
+              <div className="col-span-1 border-r border-black flex items-center justify-center" style={{ fontSize: "14px" }}>Sr.No.</div>
+              <div className="col-span-2 border-r border-black flex items-center justify-center text-xs">Description</div>
+              <div className="col-span-1 border-r border-black flex items-center justify-center" style={{ fontSize: "12px" }}>HSN/SAC Code</div>
+              <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Quantity</div>
+              <div className="col-span-1 border-r border-black flex items-center justify-center" style={{ fontSize: "14px" }}>UOM</div>
+              <div className="col-span-1 border-r border-black flex items-center justify-center" style={{ fontSize: "14px" }}>Rate</div>
+              <div className="col-span-1 border-r border-black flex items-center justify-center" style={{ fontSize: "12px" }}>Taxable Value</div>
+              {invoiceData.saleType === "Intrastate" ? (
+                <>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center" style={{ fontSize: "12px" }}>CGST</div>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center" style={{ fontSize: "12px" }}>SGST</div>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center text-[#DC143C]" style={{ fontSize: "12px" }}>IGST Not Apply</div>
+                </>
+              ) : (
+                <>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center text-[#DC143C]" style={{ fontSize: "12px" }}>CGST Not Apply</div>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center text-[#DC143C]" style={{ fontSize: "12px" }}>SGST Not Apply</div>
+                  <div className="col-span-2 border-r border-black flex items-center justify-center" style={{ fontSize: "12px" }}>IGST</div>
+                </>
+              )}
+              <div className="col-span-2 flex items-center justify-center" style={{ fontSize: "12px" }}>Total Amount</div>
+            </div>
+            <div className="grid grid-cols-15 text-xs font-bold text-center border-b-2 border-black" style={{ height: "40px" }}>
+              <div className="col-span-1 border-r border-black"></div>
+              <div className="col-span-2 border-r border-black"></div>
+              <div className="col-span-1 border-r border-black"></div>
+              <div className="col-span-1 border-r border-black"></div>
+              <div className="col-span-1 border-r border-black"></div>
+              <div className="col-span-1 border-r border-black"></div>
+              <div className="col-span-1 border-r border-black"></div>
+              {invoiceData.saleType === "Intrastate" ? (
+                <>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Rate (%)</div>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Amount (Rs.)</div>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Rate (%)</div>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Amount (Rs.)</div>
+                  <div className="col-span-2 border-r border-black"></div>
+                </>
+              ) : (
+                <>
+                  <div className="col-span-2 border-r border-black"></div>
+                  <div className="col-span-2 border-r border-black"></div>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Rate (%)</div>
+                  <div className="col-span-1 border-r border-black flex items-center justify-center text-xs">Amount (Rs.)</div>
+                </>
+              )}
+              <div className="col-span-2"></div>
+            </div>
+          </div>
+
+          {/* Rows 19-24: Item Rows - Excel A19:O24 */}
+          {invoiceData.items.map((item, index) => (
+            <div key={item.id} className={`grid grid-cols-15 text-xs border-b border-black ${index % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ minHeight: "38px" }}>
+              <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center">{index + 1}</div>
+              <div className="col-span-2 px-2 py-2 border-r border-black flex items-center">{item.description}</div>
+              <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center">{item.hsnCode}</div>
+              <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end">{item.quantity.toFixed(2)}</div>
+              <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center">{item.uom}</div>
+              <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end font-bold">{item.rate.toFixed(2)}</div>
+              <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end font-bold">{item.taxableValue.toFixed(2)}</div>
+              {invoiceData.saleType === "Intrastate" ? (
+                <>
+                  <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center font-bold">{item.cgstRate.toFixed(2)}</div>
+                  <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end font-bold">{item.cgstAmount.toFixed(2)}</div>
+                  <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center font-bold">{item.sgstRate.toFixed(2)}</div>
+                  <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end font-bold">{item.sgstAmount.toFixed(2)}</div>
+                  <div className="col-span-2 border-r border-black"></div>
+                </>
+              ) : (
+                <>
+                  <div className="col-span-2 border-r border-black"></div>
+                  <div className="col-span-2 border-r border-black"></div>
+                  <div className="col-span-1 text-center px-1 py-2 border-r border-black flex items-center justify-center font-bold">{item.igstRate.toFixed(2)}</div>
+                  <div className="col-span-1 text-right px-2 py-2 border-r border-black flex items-center justify-end font-bold">{item.igstAmount.toFixed(2)}</div>
+                </>
+              )}
+              <div className="col-span-2 text-right px-2 py-2 flex items-center justify-end font-bold">{item.totalAmount.toFixed(2)}</div>
+            </div>
+          ))}
+
+          {/* Row 25: Totals Row - Excel A25:O25 */}
+          <div className="grid grid-cols-15 bg-[#EAEAEA] font-bold border-b-2 border-black" style={{ height: "50px" }}>
+            <div className="col-span-3 text-center px-2 border-r border-black flex items-center justify-center" style={{ fontSize: "22px" }}>Total</div>
+            <div className="col-span-1 text-center px-2 border-r border-black flex items-center justify-center">{invoiceData.items.reduce((sum, item) => sum + item.quantity, 0).toFixed(2)}</div>
+            <div className="col-span-2 text-right px-2 border-r border-black flex items-center justify-end">Sub Total:</div>
+            <div className="col-span-1 text-right px-2 border-r border-black flex items-center justify-end">{totalTaxableValue.toFixed(2)}</div>
+            {invoiceData.saleType === "Intrastate" ? (
+              <>
+                <div className="col-span-1 border-r border-black"></div>
+                <div className="col-span-1 text-right px-2 border-r border-black flex items-center justify-end">{totalCGST.toFixed(2)}</div>
+                <div className="col-span-1 border-r border-black"></div>
+                <div className="col-span-1 text-right px-2 border-r border-black flex items-center justify-end">{totalSGST.toFixed(2)}</div>
+                <div className="col-span-2 border-r border-black"></div>
+              </>
+            ) : (
+              <>
+                <div className="col-span-2 border-r border-black"></div>
+                <div className="col-span-2 border-r border-black"></div>
+                <div className="col-span-1 border-r border-black"></div>
+                <div className="col-span-1 text-right px-2 border-r border-black flex items-center justify-end">{totalIGST.toFixed(2)}</div>
+              </>
+            )}
+            <div className="col-span-2 text-right px-2 flex items-center justify-end">{grandTotal.toFixed(2)}</div>
+          </div>
+
+          {/* Rows 26-33: Amount in Words & Tax Summary Side-by-Side */}
+          <div className="grid grid-cols-10">
+            {/* Left side (cols A-J): Amount in Words & Terms */}
+            <div className="col-span-6 border-r-2 border-black">
+              {/* Row 26: Amount in Words Header */}
+              <div className="bg-[#FFFF00] font-bold text-center py-2 border-b border-black" style={{ height: "32px", fontSize: "16px" }}>
+                Total Invoice Amount in Words
+              </div>
+
+              {/* Rows 27-28: Amount in Words Content */}
+              <div className="bg-[#FFFFE6] font-bold text-center flex items-center justify-center border-b-2 border-black" style={{ minHeight: "64px", fontSize: "13px", padding: "12px" }}>
+                {amountInWords}
+              </div>
+
+              {/* Row 29: Terms and Conditions Header */}
+              <div className="bg-[#FFFF00] font-bold text-center py-2 border-b border-black" style={{ height: "25px", fontSize: "14px" }}>
+                Terms and Conditions
+              </div>
+
+              {/* Rows 30-33: Terms and Conditions Content */}
+              <div className="bg-[#FFFFF5] px-3 py-2 text-xs leading-relaxed" style={{ minHeight: "100px", fontSize: "10px" }}>
+                {invoiceData.termsAndConditions.split('\n').map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
               </div>
             </div>
 
-            {/* Invoice Details Grid */}
-            <div className="border-2 border-foreground mb-4">
-              <table className="w-full text-sm">
-                <tbody>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold w-1/6">Invoice No.</td>
-                    <td className="border border-foreground p-2 w-1/6">{invoiceData.invoiceNumber}</td>
-                    <td className="border border-foreground p-2 font-semibold w-1/6">Transport Mode</td>
-                    <td className="border border-foreground p-2 w-1/6">{invoiceData.transportMode}</td>
-                    <td className="border border-foreground p-2 font-semibold w-1/6">Challan No.</td>
-                    <td className="border border-foreground p-2 w-1/6">{invoiceData.challanNumber}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold">Invoice Date</td>
-                    <td className="border border-foreground p-2">{invoiceData.invoiceDate}</td>
-                    <td className="border border-foreground p-2 font-semibold">Vehicle Number</td>
-                    <td className="border border-foreground p-2">{invoiceData.vehicleNumber}</td>
-                    <td className="border border-foreground p-2 font-semibold">Transporter Name</td>
-                    <td className="border border-foreground p-2">{invoiceData.transporterName}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold">State</td>
-                    <td className="border border-foreground p-2">{invoiceData.companyState}</td>
-                    <td className="border border-foreground p-2 font-semibold">Date of Supply</td>
-                    <td className="border border-foreground p-2">{invoiceData.dateOfSupply}</td>
-                    <td className="border border-foreground p-2 font-semibold">L.R Number</td>
-                    <td className="border border-foreground p-2">{invoiceData.lrNumber}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold">State Code</td>
-                    <td className="border border-foreground p-2">{invoiceData.companyStateCode}</td>
-                    <td className="border border-foreground p-2 font-semibold">Place of Supply</td>
-                    <td className="border border-foreground p-2">{invoiceData.placeOfSupply}</td>
-                    <td className="border border-foreground p-2 font-semibold">P.O Number</td>
-                    <td className="border border-foreground p-2">{invoiceData.poNumber}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold">Sale Type</td>
-                    <td className="border border-foreground p-2">{invoiceData.saleType}</td>
-                    <td className="border border-foreground p-2 font-semibold">Invoice Type</td>
-                    <td className="border border-foreground p-2">{invoiceData.invoiceType}</td>
-                    <td className="border border-foreground p-2 font-semibold">E-Way Bill No.</td>
-                    <td className="border border-foreground p-2">{invoiceData.eWayBillNumber}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-foreground p-2 font-semibold" colSpan={2}>Reverse Charge</td>
-                    <td className="border border-foreground p-2" colSpan={4}>{invoiceData.reverseCharge}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Receiver and Consignee Details */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="border-2 border-foreground">
-                <div className="bg-table-header p-2 font-bold text-sm">Details of Receiver (Billed to)</div>
-                <div className="p-2 text-sm space-y-1">
-                  <div><span className="font-semibold">Name:</span> {invoiceData.receiverName}</div>
-                  <div><span className="font-semibold">Address:</span> {invoiceData.receiverAddress}</div>
-                  <div><span className="font-semibold">GSTIN:</span> {invoiceData.receiverGSTIN}</div>
-                  <div><span className="font-semibold">State:</span> {invoiceData.receiverState}</div>
-                  <div><span className="font-semibold">State Code:</span> {invoiceData.receiverStateCode}</div>
-                </div>
+            {/* Right side (cols K-O): Tax Summary */}
+            <div className="col-span-4">
+              {/* Row 26 */}
+              <div className="grid grid-cols-2 border-b border-black" style={{ height: "32px" }}>
+                <div className="font-bold px-2 bg-[#F5F5F5] border-r border-black flex items-center text-xs">Total Amount Before Tax:</div>
+                <div className="text-right px-2 font-bold bg-[#D8DEE9] flex items-center justify-end text-xs">{totalTaxableValue.toFixed(2)}</div>
               </div>
-              <div className="border-2 border-foreground">
-                <div className="bg-table-header p-2 font-bold text-sm">Details of Consignee (Shipped to)</div>
-                <div className="p-2 text-sm space-y-1">
-                  <div><span className="font-semibold">Name:</span> {invoiceData.consigneeName}</div>
-                  <div><span className="font-semibold">Address:</span> {invoiceData.consigneeAddress}</div>
-                  <div><span className="font-semibold">GSTIN:</span> {invoiceData.consigneeGSTIN}</div>
-                  <div><span className="font-semibold">State:</span> {invoiceData.consigneeState}</div>
-                  <div><span className="font-semibold">State Code:</span> {invoiceData.consigneeStateCode}</div>
-                </div>
+
+              {/* Row 27 */}
+              <div className="grid grid-cols-2 border-b border-black" style={{ height: "30px" }}>
+                <div className="font-bold px-2 bg-[#F5F5F5] border-r border-black flex items-center text-xs">CGST :</div>
+                <div className="text-right px-2 font-bold bg-[#D8DEE9] flex items-center justify-end text-xs">{totalCGST.toFixed(2)}</div>
+              </div>
+
+              {/* Row 28 */}
+              <div className="grid grid-cols-2 border-b border-black" style={{ height: "30px" }}>
+                <div className="font-bold px-2 bg-[#F5F5F5] border-r border-black flex items-center text-xs">SGST :</div>
+                <div className="text-right px-2 font-bold bg-[#D8DEE9] flex items-center justify-end text-xs">{totalSGST.toFixed(2)}</div>
+              </div>
+
+              {/* Row 29 */}
+              <div className="grid grid-cols-2 border-b border-black" style={{ height: "30px" }}>
+                <div className="font-bold px-2 bg-[#FFFFC8] border-r border-black flex items-center text-xs">IGST :</div>
+                <div className="text-right px-2 font-bold bg-[#FFFFC8] flex items-center justify-end text-xs">{totalIGST.toFixed(2)}</div>
+              </div>
+
+              {/* Row 30 */}
+              <div className="grid grid-cols-2 border-b border-black" style={{ height: "30px" }}>
+                <div className="font-bold px-2 bg-[#F5F5F5] border-r border-black flex items-center text-xs">CESS :</div>
+                <div className="text-right px-2 font-bold bg-[#D8DEE9] flex items-center justify-end text-xs">0.00</div>
+              </div>
+
+              {/* Row 31 */}
+              <div className="grid grid-cols-2 border-b-2 border-black" style={{ height: "30px" }}>
+                <div className="font-bold px-2 bg-[#F0F0F0] border-r border-black flex items-center text-xs">Total Tax:</div>
+                <div className="text-right px-2 font-bold bg-[#F0F0F0] flex items-center justify-end text-xs">{totalTax.toFixed(2)}</div>
+              </div>
+
+              {/* Rows 32-33: Total Amount After Tax (merged 2 rows) */}
+              <div className="grid grid-cols-2 bg-[#FFD700]" style={{ minHeight: "76px" }}>
+                <div className="font-bold px-2 text-center border-r border-black flex items-center justify-center" style={{ fontSize: "13px" }}>Total Amount After Tax:</div>
+                <div className="text-center px-2 font-bold flex items-center justify-center" style={{ fontSize: "14px" }}>{grandTotal.toFixed(2)}</div>
               </div>
             </div>
+          </div>
 
-            {/* Items Table */}
-            <div className="border-2 border-foreground mb-4">
-              <table className="w-full text-xs">
-                <thead className="bg-table-header">
-                  <tr>
-                    <th className="border border-foreground p-2">Sr.</th>
-                    <th className="border border-foreground p-2">Description</th>
-                    <th className="border border-foreground p-2">HSN/SAC</th>
-                    <th className="border border-foreground p-2">Qty</th>
-                    <th className="border border-foreground p-2">UOM</th>
-                    <th className="border border-foreground p-2">Rate</th>
-                    <th className="border border-foreground p-2">Taxable Value</th>
-                    {invoiceData.saleType === "Intrastate" ? (
-                      <>
-                        <th className="border border-foreground p-2">CGST %</th>
-                        <th className="border border-foreground p-2">CGST Amt</th>
-                        <th className="border border-foreground p-2">SGST %</th>
-                        <th className="border border-foreground p-2">SGST Amt</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="border border-foreground p-2">IGST %</th>
-                        <th className="border border-foreground p-2">IGST Amt</th>
-                      </>
-                    )}
-                    <th className="border border-foreground p-2">Total Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoiceData.items.map((item, index) => (
-                    <tr key={item.id}>
-                      <td className="border border-foreground p-2 text-center">{index + 1}</td>
-                      <td className="border border-foreground p-2">{item.description}</td>
-                      <td className="border border-foreground p-2 text-center">{item.hsnCode}</td>
-                      <td className="border border-foreground p-2 text-right">{item.quantity.toFixed(2)}</td>
-                      <td className="border border-foreground p-2 text-center">{item.uom}</td>
-                      <td className="border border-foreground p-2 text-right">{item.rate.toFixed(2)}</td>
-                      <td className="border border-foreground p-2 text-right">{item.taxableValue.toFixed(2)}</td>
-                      {invoiceData.saleType === "Intrastate" ? (
-                        <>
-                          <td className="border border-foreground p-2 text-center">{item.cgstRate.toFixed(2)}</td>
-                          <td className="border border-foreground p-2 text-right">{item.cgstAmount.toFixed(2)}</td>
-                          <td className="border border-foreground p-2 text-center">{item.sgstRate.toFixed(2)}</td>
-                          <td className="border border-foreground p-2 text-right">{item.sgstAmount.toFixed(2)}</td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="border border-foreground p-2 text-center">{item.igstRate.toFixed(2)}</td>
-                          <td className="border border-foreground p-2 text-right">{item.igstAmount.toFixed(2)}</td>
-                        </>
-                      )}
-                      <td className="border border-foreground p-2 text-right font-semibold">{item.totalAmount.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-bold bg-table-header">
-                    <td colSpan={6} className="border border-foreground p-2 text-right">Total</td>
-                    <td className="border border-foreground p-2 text-right">{totalTaxableValue.toFixed(2)}</td>
-                    {invoiceData.saleType === "Intrastate" ? (
-                      <>
-                        <td className="border border-foreground p-2"></td>
-                        <td className="border border-foreground p-2 text-right">{totalCGST.toFixed(2)}</td>
-                        <td className="border border-foreground p-2"></td>
-                        <td className="border border-foreground p-2 text-right">{totalSGST.toFixed(2)}</td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="border border-foreground p-2"></td>
-                        <td className="border border-foreground p-2 text-right">{totalIGST.toFixed(2)}</td>
-                      </>
-                    )}
-                    <td className="border border-foreground p-2 text-right">{grandTotal.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
+          {/* Rows 34-40: Signature Section (3 columns) - Excel A34:O40 */}
+          <div className="grid grid-cols-3 border-t-2 border-black">
+            <div className="border-r-2 border-black text-center" style={{ minHeight: "120px", padding: "20px" }}>
+              <div className="font-bold mb-6" style={{ fontSize: "13px" }}>Transporter</div>
+              <div className="text-xs mb-2">Mobile No: ___________________</div>
+              <div className="text-xs mt-8">Transporter's Signature</div>
             </div>
-
-            {/* Amount in Words and Summary */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="border-2 border-foreground p-2">
-                <div className="font-bold text-sm mb-2">Total Invoice Amount in Words</div>
-                <div className="text-sm">{amountInWords}</div>
-              </div>
-              <div className="border-2 border-foreground">
-                <table className="w-full text-sm">
-                  <tbody>
-                    <tr>
-                      <td className="border border-foreground p-2 font-semibold">Total Amount Before Tax:</td>
-                      <td className="border border-foreground p-2 text-right">{totalTaxableValue.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-foreground p-2">CGST:</td>
-                      <td className="border border-foreground p-2 text-right">{totalCGST.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-foreground p-2">SGST:</td>
-                      <td className="border border-foreground p-2 text-right">{totalSGST.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-foreground p-2">IGST:</td>
-                      <td className="border border-foreground p-2 text-right">{totalIGST.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-foreground p-2">CESS:</td>
-                      <td className="border border-foreground p-2 text-right">0.00</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-foreground p-2 font-semibold">Total Tax:</td>
-                      <td className="border border-foreground p-2 text-right font-semibold">{totalTax.toFixed(2)}</td>
-                    </tr>
-                    <tr className="bg-table-header">
-                      <td className="border border-foreground p-2 font-bold">Total Amount After Tax:</td>
-                      <td className="border border-foreground p-2 text-right font-bold">{grandTotal.toFixed(2)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            <div className="border-r-2 border-black text-center" style={{ minHeight: "120px", padding: "20px" }}>
+              <div className="font-bold mb-6" style={{ fontSize: "13px" }}>Receiver</div>
+              <div className="text-xs mb-2">Mobile No: ___________________</div>
+              <div className="text-xs mt-8">Receiver's Signature</div>
             </div>
-
-            {/* Terms and Conditions */}
-            <div className="border-2 border-foreground p-2 mb-4">
-              <div className="font-bold text-sm mb-2">Terms and Conditions</div>
-              <div className="text-xs whitespace-pre-line">{invoiceData.termsAndConditions}</div>
-            </div>
-
-            {/* Signature Section */}
-            <div className="grid grid-cols-3 gap-4 border-2 border-foreground">
-              <div className="border-r border-foreground p-4 text-center">
-                <div className="text-sm font-semibold mb-8">Transporter</div>
-                <div className="text-xs">Mobile No: ___________________</div>
-                <div className="text-xs mt-4">Transporter's Signature</div>
+            <div className="text-center" style={{ minHeight: "120px", padding: "20px" }}>
+              <div className="font-bold text-sm mb-3">
+                Certified that the particulars given above are true and correct
               </div>
-              <div className="border-r border-foreground p-4 text-center">
-                <div className="text-sm font-semibold mb-8">Receiver</div>
-                <div className="text-xs">Mobile No: ___________________</div>
-                <div className="text-xs mt-4">Receiver's Signature</div>
-              </div>
-              <div className="p-4 text-center">
-                <div className="text-sm font-semibold mb-2">Certified that the particulars given above are true and correct</div>
-                <div className="text-xs mt-8">Mobile No: ___________________</div>
-                <div className="text-xs mt-4">Authorized Signatory</div>
-              </div>
+              <div className="text-xs mb-2 mt-6">Mobile No: ___________________</div>
+              <div className="text-xs mt-8">Authorized Signatory</div>
             </div>
           </div>
         </div>
@@ -317,11 +431,33 @@ const InvoicePreview = () => {
           body {
             margin: 0;
             padding: 0;
+            background: white;
           }
           .page-break {
             page-break-after: always;
           }
+          @page {
+            size: A4 portrait;
+            margin: 0.15in;
+          }
         }
+        
+        /* Custom 15-column grid */
+        .grid-cols-15 {
+          display: grid;
+          grid-template-columns: repeat(15, minmax(0, 1fr));
+        }
+        
+        .col-span-1 { grid-column: span 1 / span 1; }
+        .col-span-2 { grid-column: span 2 / span 2; }
+        .col-span-3 { grid-column: span 3 / span 3; }
+        .col-span-4 { grid-column: span 4 / span 4; }
+        .col-span-5 { grid-column: span 5 / span 5; }
+        .col-span-6 { grid-column: span 6 / span 6; }
+        .col-span-7 { grid-column: span 7 / span 7; }
+        .col-span-8 { grid-column: span 8 / span 8; }
+        .col-span-9 { grid-column: span 9 / span 9; }
+        .col-span-10 { grid-column: span 10 / span 10; }
       `}</style>
     </div>
   );
