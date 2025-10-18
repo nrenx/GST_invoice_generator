@@ -30,64 +30,67 @@ const InvoicePreview = () => {
     const style = document.createElement('style');
     style.textContent = `
       @media print {
-        .no-print { 
-          display: none !important; 
+        .no-print {
+          display: none !important;
         }
-        
+
         @page {
           size: A4 portrait;
           margin: 0.15in;
           -webkit-print-color-adjust: exact;
           color-adjust: exact;
+          print-color-adjust: exact;
         }
-        
-        body { 
-          -webkit-print-color-adjust: exact;
-          color-adjust: exact;
+
+        html, body {
+          width: 100%;
+          height: auto;
           margin: 0;
           padding: 0;
+          -webkit-print-color-adjust: exact;
+          color-adjust: exact;
+          print-color-adjust: exact;
         }
-        
-        /* Show both pages for PDF - Each page gets its own sheet */
+
+        .invoice-preview-wrapper {
+          background: transparent !important;
+          padding: 0 !important;
+          gap: 0 !important;
+        }
+
+        /* Match the printable area (210mm minus 0.15in margins on both sides) */
         .invoice-container {
-          width: 100% !important;
-          height: auto !important;
-          transform: scale(0.8) !important;
-          transform-origin: top center !important;
+          width: calc(210mm - 0.3in) !important;
+          min-height: calc(297mm - 0.3in) !important;
+          margin: 0 auto !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
           page-break-inside: avoid !important;
-          page-break-after: always !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          display: block !important; /* Force both pages visible */
-        }
-        
-        /* Remove the last page break to avoid blank page */
-        .invoice-container:last-child {
           page-break-after: avoid !important;
+          display: block !important;
+          transform: none !important;
+          transform-origin: top center !important;
         }
-        
+
+        .invoice-container + .invoice-container {
+          page-break-before: always !important;
+        }
+
         table {
-          border-collapse: collapse !important;
           width: 100% !important;
+          border-collapse: collapse !important;
           border: 2px solid black !important;
-          font-size: 9px !important;
-          margin: 0 auto !important;
+          margin: 0 !important;
           padding: 0 !important;
         }
-        
-        td {
+
+        td, th {
           border: 1px solid black !important;
-          padding: 1px 2px !important;
+          margin: 0 !important;
           -webkit-print-color-adjust: exact !important;
           color-adjust: exact !important;
-          font-size: 9px !important;
-          line-height: 1.0 !important;
-          margin: 0 !important;
-        }
-        
-        tr {
-          height: auto !important;
-          margin: 0 !important;
+          print-color-adjust: exact !important;
+          word-break: break-word !important;
         }
       }
     `;
@@ -170,14 +173,18 @@ const InvoicePreview = () => {
         </div>
       </div>
 
-      {/* Invoice Content - Two pages for PDF like VBA */}
-      <div className="container mx-auto px-4 py-8">
+      {/* Invoice Content - visually center the A4 sheet while keeping print metrics exact */}
+      <div
+        className="invoice-preview-wrapper flex flex-col items-center gap-8 px-4 py-6 lg:px-8"
+        style={{ backgroundColor: "#f5f5f5" }}
+      >
         {/* Original Page */}
         <div 
           data-page="original"
           className="bg-white shadow-lg mx-auto border-2 border-black invoice-container mb-8"
-          style={{ 
-            width: "210mm", 
+          style={{
+            width: "100%",
+            maxWidth: "210mm",
             minHeight: "297mm",
             fontFamily: "'Segoe UI', Arial, sans-serif",
             display: currentPage === "original" ? "block" : "none"
@@ -200,8 +207,9 @@ const InvoicePreview = () => {
         <div 
           data-page="duplicate"
           className="bg-white shadow-lg mx-auto border-2 border-black invoice-container"
-          style={{ 
-            width: "210mm", 
+          style={{
+            width: "100%",
+            maxWidth: "210mm",
             minHeight: "297mm",
             fontFamily: "'Segoe UI', Arial, sans-serif",
             display: currentPage === "duplicate" ? "block" : "none"
