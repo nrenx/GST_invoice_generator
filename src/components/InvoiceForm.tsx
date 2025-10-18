@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -59,25 +59,41 @@ const invoiceSchema = z.object({
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
+const FORM_STORAGE_KEY = 'invoice-form-data';
+
+const getDefaultValues = (): InvoiceFormData => {
+  const storedData = localStorage.getItem(FORM_STORAGE_KEY);
+  if (storedData) {
+    try {
+      return JSON.parse(storedData);
+    } catch (error) {
+      console.error('Error parsing stored form data:', error);
+      localStorage.removeItem(FORM_STORAGE_KEY);
+    }
+  }
+  
+  return {
+    companyName: "KAVERI TRADERS",
+    companyAddress: "191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409",
+    companyGSTIN: "37HERPB7733F1Z5",
+    companyEmail: "kotidarisetty7777@gmail.com",
+    companyState: "Andhra Pradesh",
+    companyStateCode: "37",
+    invoiceType: "Tax Invoice",
+    reverseCharge: "No",
+    saleType: "Interstate",
+    items: [{ description: "", hsnCode: "", quantity: 0, uom: "", rate: 0 }],
+    termsAndConditions: "1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.",
+  };
+};
+
 export const InvoiceForm = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState(0);
 
-  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<InvoiceFormData>({
+  const { register, control, handleSubmit, watch, setValue, formState: { errors }, reset } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
-    defaultValues: {
-      companyName: "KAVERI TRADERS",
-      companyAddress: "191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409",
-      companyGSTIN: "37HERPB7733F1Z5",
-      companyEmail: "kotidarisetty7777@gmail.com",
-      companyState: "Andhra Pradesh",
-      companyStateCode: "37",
-      invoiceType: "Tax Invoice",
-      reverseCharge: "No",
-      saleType: "Interstate",
-      items: [{ description: "", hsnCode: "", quantity: 0, uom: "", rate: 0 }],
-      termsAndConditions: "1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.",
-    },
+    defaultValues: getDefaultValues(),
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -90,12 +106,62 @@ export const InvoiceForm = () => {
   const watchCompanyStateCode = watch("companyStateCode");
   const watchReceiverStateCode = watch("receiverStateCode");
 
+  // Watch all form data and save to localStorage
+  const watchedFormData = watch();
+
+  useEffect(() => {
+    // Save form data to localStorage whenever form changes
+    const saveFormData = () => {
+      try {
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(watchedFormData));
+      } catch (error) {
+        console.error('Error saving form data to localStorage:', error);
+      }
+    };
+
+    // Debounce the save operation to avoid too frequent localStorage writes
+    const timeoutId = setTimeout(saveFormData, 500);
+    return () => clearTimeout(timeoutId);
+  }, [watchedFormData]);
+
+  // Auto-update sale type when state codes change
+  useEffect(() => {
+    if (watchCompanyStateCode && watchReceiverStateCode) {
+      const newSaleType = determineSaleType(watchCompanyStateCode, watchReceiverStateCode);
+      if (newSaleType !== watchSaleType) {
+        setValue("saleType", newSaleType);
+        toast.success(`Sale type updated to ${newSaleType}`);
+      }
+    }
+  }, [watchCompanyStateCode, watchReceiverStateCode, setValue, watchSaleType]);
+
   // Auto-determine sale type based on state codes
   const determineSaleType = (companyCode: string, receiverCode: string) => {
     if (companyCode && receiverCode) {
       return companyCode === receiverCode ? "Intrastate" : "Interstate";
     }
     return "Interstate";
+  };
+
+  // Clear form and localStorage
+  const clearForm = () => {
+    const defaultValues = {
+      companyName: "KAVERI TRADERS",
+      companyAddress: "191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409",
+      companyGSTIN: "37HERPB7733F1Z5",
+      companyEmail: "kotidarisetty7777@gmail.com",
+      companyState: "Andhra Pradesh",
+      companyStateCode: "37",
+      invoiceType: "Tax Invoice",
+      reverseCharge: "No",
+      saleType: "Interstate",
+      items: [{ description: "", hsnCode: "", quantity: 0, uom: "", rate: 0 }],
+      termsAndConditions: "1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.",
+    };
+    
+    reset(defaultValues);
+    localStorage.removeItem(FORM_STORAGE_KEY);
+    toast.success("Form cleared successfully");
   };
 
   const copyReceiverToConsignee = () => {
@@ -153,6 +219,13 @@ export const InvoiceForm = () => {
   };
 
   const onSubmit = (data: InvoiceFormData, action: "preview" | "download") => {
+    // Ensure form data is saved to localStorage before navigation
+    try {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving form data to localStorage:', error);
+    }
+
     const invoiceData: InvoiceData = {
       companyName: data.companyName || "",
       companyAddress: data.companyAddress || "",
@@ -588,26 +661,38 @@ export const InvoiceForm = () => {
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 justify-end sticky bottom-0 bg-background border-t border-border p-4 shadow-lg">
+      <div className="flex gap-4 justify-between sticky bottom-0 bg-background border-t border-border p-4 shadow-lg">
         <Button
           type="button"
-          variant="outline"
+          variant="destructive"
           size="lg"
-          onClick={handleSubmit((data) => onSubmit(data, "preview"))}
+          onClick={clearForm}
           className="gap-2"
         >
-          <Eye className="h-5 w-5" />
-          Preview Invoice
+          <Plus className="h-5 w-5" />
+          New Invoice
         </Button>
-        <Button
-          type="button"
-          size="lg"
-          onClick={handleSubmit((data) => onSubmit(data, "download"))}
-          className="gap-2"
-        >
-          <Download className="h-5 w-5" />
-          Download PDF
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={handleSubmit((data) => onSubmit(data, "preview"))}
+            className="gap-2"
+          >
+            <Eye className="h-5 w-5" />
+            Preview Invoice
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleSubmit((data) => onSubmit(data, "download"))}
+            className="gap-2"
+          >
+            <Download className="h-5 w-5" />
+            Download PDF
+          </Button>
+        </div>
       </div>
     </form>
   );
