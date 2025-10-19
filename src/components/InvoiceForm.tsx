@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import type { FocusEvent } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +48,10 @@ const invoiceSchema = z.object({
   companyState: z.string().min(1, "State is required"),
   companyStateCode: z.string().min(1, "State code is required"),
   invoiceNumber: z.string().min(1, "Invoice number is required"),
-  invoiceDate: z.string().min(1, "Invoice date is required"),
+  invoiceDate: z
+    .string()
+    .min(1, "Invoice date is required")
+    .refine((value) => DATE_FORMAT_REGEX.test(value), "Use DD/MM/YYYY format"),
   invoiceType: z.string().default("Tax Invoice"),
   saleType: z.string().min(1, "Sale type is required"),
   reverseCharge: z.string().default("No"),
@@ -57,7 +60,10 @@ const invoiceSchema = z.object({
   transporterName: z.string().optional(),
   challanNumber: z.string().optional(),
   lrNumber: z.string().optional(),
-  dateOfSupply: z.string().min(1, "Date of supply is required"),
+  dateOfSupply: z
+    .string()
+    .min(1, "Date of supply is required")
+    .refine((value) => DATE_FORMAT_REGEX.test(value), "Use DD/MM/YYYY format"),
   placeOfSupply: z.string().optional(),
   poNumber: z.string().optional(),
   eWayBillNumber: z.string().optional(),
@@ -93,6 +99,7 @@ const TERMS_TEMPLATE = "1. This is an electronically generated invoice.\n2. All 
 const LOCKED_INPUT_CLASSES = "bg-muted/40 text-muted-foreground cursor-not-allowed";
 const COMPUTED_INPUT_CLASSES = "bg-muted/30 font-medium cursor-not-allowed";
 const COMPUTED_TOTAL_INPUT_CLASSES = "bg-muted font-semibold cursor-not-allowed";
+const DATE_FORMAT_REGEX = /^\d{2}\/\d{2}\/\d{4}$/;
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -101,10 +108,32 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 2,
 });
 
-const getTodayForInput = () => {
-  const now = new Date();
-  const offsetMs = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offsetMs).toISOString().split("T")[0];
+const formatDateDDMMYYYY = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const getTodayForInput = () => formatDateDDMMYYYY(new Date());
+
+const normalizeDateInput = (value: string | undefined, fallback: string) => {
+  if (!value) {
+    return fallback;
+  }
+
+  if (value.includes("/")) {
+    return value;
+  }
+
+  if (value.includes("-")) {
+    const [year, month, day] = value.split("-");
+    if (year && month && day) {
+      return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+    }
+  }
+
+  return value;
 };
 
 type ItemFormValue = {
@@ -137,12 +166,12 @@ const buildBaseDefaults = (): InvoiceFormData => {
     companyEmail: "kotidarisetty7777@gmail.com",
     companyState: "Andhra Pradesh",
     companyStateCode: "37",
-    invoiceNumber: "",
+  invoiceNumber: "INV-2025-12",
     invoiceDate: today,
     invoiceType: "Tax Invoice",
     saleType: "Interstate",
     reverseCharge: "No",
-    transportMode: "",
+  transportMode: transportModes[0] ?? "",
     vehicleNumber: "",
     transporterName: "",
     challanNumber: "",
@@ -201,8 +230,8 @@ const getDefaultValues = (): InvoiceFormData => {
       return {
         ...baseDefaults,
         ...parsedData,
-        invoiceDate: parsedData?.invoiceDate || baseDefaults.invoiceDate,
-        dateOfSupply: parsedData?.dateOfSupply || baseDefaults.dateOfSupply,
+        invoiceDate: normalizeDateInput(parsedData?.invoiceDate, baseDefaults.invoiceDate),
+        dateOfSupply: normalizeDateInput(parsedData?.dateOfSupply, baseDefaults.dateOfSupply),
         receiverGSTIN: parsedData?.receiverGSTIN || baseDefaults.receiverGSTIN,
         consigneeGSTIN: parsedData?.consigneeGSTIN || baseDefaults.consigneeGSTIN,
         items: mergedItems,
@@ -276,7 +305,6 @@ export const InvoiceForm = () => {
     name: "items",
   });
 
-  const watchItems = watch("items");
   const watchSaleType = watch("saleType");
   const watchCompanyStateCode = watch("companyStateCode");
   const watchReceiverStateCode = watch("receiverStateCode");
@@ -286,18 +314,16 @@ export const InvoiceForm = () => {
   const reverseChargeValue = watch("reverseCharge");
   const receiverStateValue = watch("receiverState");
   const consigneeStateValue = watch("consigneeState");
+  const invoiceDateValue = watch("invoiceDate");
+  const dateOfSupplyValue = watch("dateOfSupply");
+  const watchedItems = useWatch({ control, name: "items" });
 
   const effectiveSaleType = watchSaleType || "Interstate";
   const receiverGSTINMode = receiverGSTINValue === "UNREGISTERED" ? "UNREGISTERED" : "GSTIN";
   const consigneeGSTINMode = consigneeGSTINValue === "UNREGISTERED" ? "UNREGISTERED" : "GSTIN";
 
-  const derivedItems = useMemo(() => {
-    if (!Array.isArray(watchItems)) {
-      return [];
-    }
-
-    return (watchItems as ItemFormValue[]).map((item) => calculateItemTotals(item, effectiveSaleType));
-  }, [watchItems, effectiveSaleType]);
+  const itemsForCalculation = Array.isArray(watchedItems) ? (watchedItems as ItemFormValue[]) : [];
+  const derivedItems = itemsForCalculation.map((item) => calculateItemTotals(item, effectiveSaleType));
 
   const handleGSTINBlur = (field: "receiverGSTIN" | "consigneeGSTIN") => (event: FocusEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.trim().toUpperCase();
@@ -352,6 +378,20 @@ export const InvoiceForm = () => {
     }
     return "Interstate";
   };
+
+  useEffect(() => {
+    const normalizedInvoiceDate = normalizeDateInput(invoiceDateValue, getTodayForInput());
+    if (invoiceDateValue && normalizedInvoiceDate !== invoiceDateValue) {
+      setValue("invoiceDate", normalizedInvoiceDate, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [invoiceDateValue, setValue]);
+
+  useEffect(() => {
+    const normalizedSupplyDate = normalizeDateInput(dateOfSupplyValue, getTodayForInput());
+    if (dateOfSupplyValue && normalizedSupplyDate !== dateOfSupplyValue) {
+      setValue("dateOfSupply", normalizedSupplyDate, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [dateOfSupplyValue, setValue]);
 
   // Clear form and localStorage
   const clearForm = () => {
@@ -523,12 +563,12 @@ export const InvoiceForm = () => {
             </div>
             <div>
               <Label htmlFor="invoiceDate">Invoice Date *</Label>
-              <Input {...register("invoiceDate")} type="date" id="invoiceDate" />
+              <Input {...register("invoiceDate")} id="invoiceDate" placeholder="DD/MM/YYYY" />
               {errors.invoiceDate && <p className="text-sm text-destructive mt-1">{errors.invoiceDate.message}</p>}
             </div>
             <div>
               <Label htmlFor="dateOfSupply">Date of Supply *</Label>
-              <Input {...register("dateOfSupply")} type="date" id="dateOfSupply" />
+              <Input {...register("dateOfSupply")} id="dateOfSupply" placeholder="DD/MM/YYYY" />
               {errors.dateOfSupply && <p className="text-sm text-destructive mt-1">{errors.dateOfSupply.message}</p>}
             </div>
           </div>
@@ -582,11 +622,11 @@ export const InvoiceForm = () => {
             <div>
               <Label htmlFor="transportMode">Transport Mode</Label>
               <Select
-                value={transportModeValue || undefined}
+                value={transportModeValue || transportModes[0]}
                 onValueChange={(value) => setValue("transportMode", value, { shouldDirty: true, shouldValidate: true })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select mode" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {transportModes.map(mode => (
@@ -797,7 +837,7 @@ export const InvoiceForm = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {fields.map((field, index) => {
-            const currentItem = Array.isArray(watchItems) && watchItems[index] ? watchItems[index] : buildDefaultItem();
+            const currentItem = itemsForCalculation[index] ?? buildDefaultItem();
             const derivedItem = derivedItems[index];
             const descriptionValue = typeof currentItem?.description === "string" ? currentItem.description : "";
             const descriptionSelectValue = DESCRIPTION_OPTIONS.includes(descriptionValue) ? descriptionValue : "CUSTOM";
