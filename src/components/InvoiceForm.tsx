@@ -91,7 +91,7 @@ const invoiceSchema = z.object({
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
-const FORM_STORAGE_KEY = "invoice-form-data";
+const getFormStorageKey = (profileId: string) => `invoice-form-data-${profileId}`;
 const DEFAULT_HSN_CODE = "4404";
 const DEFAULT_UOM = "MTS";
 const DESCRIPTION_OPTIONS = ["Casuarina Poles", "Casuarina Wood"];
@@ -212,14 +212,15 @@ const mergeItemsWithDefaults = (items: unknown[]): InvoiceFormData["items"] => {
   });
 };
 
-const getDefaultValues = (profile?: Profile): InvoiceFormData => {
+const getDefaultValues = (profile: Profile): InvoiceFormData => {
   const baseDefaults = buildBaseDefaults(profile);
 
   if (typeof window === "undefined") {
     return baseDefaults;
   }
 
-  const storedData = window.localStorage.getItem(FORM_STORAGE_KEY);
+  const storageKey = getFormStorageKey(profile.id);
+  const storedData = window.localStorage.getItem(storageKey);
   if (storedData) {
     try {
       const parsedData = JSON.parse(storedData);
@@ -235,11 +236,11 @@ const getDefaultValues = (profile?: Profile): InvoiceFormData => {
         receiverGSTIN: parsedData?.receiverGSTIN || baseDefaults.receiverGSTIN,
         consigneeGSTIN: parsedData?.consigneeGSTIN || baseDefaults.consigneeGSTIN,
         items: mergedItems,
-        termsAndConditions: parsedData?.termsAndConditions || TERMS_TEMPLATE,
+        termsAndConditions: parsedData?.termsAndConditions || baseDefaults.termsAndConditions,
       };
     } catch (error) {
       console.error("Error parsing stored form data:", error);
-      window.localStorage.removeItem(FORM_STORAGE_KEY);
+      window.localStorage.removeItem(storageKey);
     }
   }
 
@@ -355,7 +356,8 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
         if (typeof window === "undefined") {
           return;
         }
-        window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(watchedFormData));
+        const storageKey = getFormStorageKey(profile.id);
+        window.localStorage.setItem(storageKey, JSON.stringify(watchedFormData));
       } catch (error) {
         console.error('Error saving form data to localStorage:', error);
       }
@@ -364,7 +366,7 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
     // Debounce the save operation to avoid too frequent localStorage writes
     const timeoutId = setTimeout(saveFormData, 500);
     return () => clearTimeout(timeoutId);
-  }, [watchedFormData]);
+  }, [watchedFormData, profile.id]);
 
   // Auto-update sale type when state codes change
   useEffect(() => {
@@ -401,11 +403,12 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
 
   // Clear form and localStorage
   const clearForm = () => {
-    const defaults = buildBaseDefaults();
+    const defaults = buildBaseDefaults(profile);
 
     reset(defaults);
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem(FORM_STORAGE_KEY);
+      const storageKey = getFormStorageKey(profile.id);
+      window.localStorage.removeItem(storageKey);
     }
     toast.success("Form cleared successfully");
   };
@@ -429,7 +432,8 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
     // Ensure form data is saved to localStorage before navigation
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+        const storageKey = getFormStorageKey(profile.id);
+        window.localStorage.setItem(storageKey, JSON.stringify(data));
       }
     } catch (error) {
       console.error('Error saving form data to localStorage:', error);
