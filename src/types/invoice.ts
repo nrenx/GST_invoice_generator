@@ -21,6 +21,7 @@ export interface InvoiceData {
   companyAddress: string;
   companyGSTIN: string;
   companyEmail: string;
+  companyPhone: string;
   companyState: string;
   companyStateCode: string;
 

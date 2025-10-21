@@ -45,6 +45,7 @@ const invoiceSchema = z.object({
   companyAddress: z.string().min(1, "Company address is required"),
   companyGSTIN: gstinSchema,
   companyEmail: z.string().email("Valid email is required"),
+  companyPhone: z.string().optional(),
   companyState: z.string().min(1, "State is required"),
   companyStateCode: z.string().min(1, "State code is required"),
   invoiceNumber: z.string().min(1, "Invoice number is required"),
@@ -164,6 +165,7 @@ const buildBaseDefaults = (profile?: Profile): InvoiceFormData => {
     companyAddress: profile?.companyDetails.address || "191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409",
     companyGSTIN: profile?.companyDetails.gstin || "37HERPB7733F1Z5",
     companyEmail: profile?.companyDetails.email || "kotidarisetty7777@gmail.com",
+    companyPhone: profile?.companyDetails.phone || "",
     companyState: profile?.companyDetails.state || "Andhra Pradesh",
     companyStateCode: profile?.companyDetails.stateCode || "37",
   invoiceNumber: "INV-2025-12",
@@ -444,6 +446,7 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
       companyAddress: data.companyAddress || "",
       companyGSTIN: data.companyGSTIN || "",
       companyEmail: data.companyEmail || "",
+      companyPhone: data.companyPhone || "",
       companyState: data.companyState || "",
       companyStateCode: data.companyStateCode || "",
       invoiceNumber: data.invoiceNumber || "",
@@ -537,6 +540,16 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
               {errors.companyEmail && <p className="text-sm text-destructive mt-1">{errors.companyEmail.message}</p>}
             </div>
             <div>
+              <Label htmlFor="companyPhone">Phone</Label>
+              <Input
+                {...register("companyPhone")}
+                type="tel"
+                id="companyPhone"
+                readOnly
+                className={LOCKED_INPUT_CLASSES}
+              />
+            </div>
+            <div>
               <Label htmlFor="companyState">State *</Label>
               <Input
                 {...register("companyState")}
@@ -544,6 +557,18 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
                 readOnly
                 className={LOCKED_INPUT_CLASSES}
               />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="companyGSTIN">GSTIN *</Label>
+              <Input
+                {...register("companyGSTIN")}
+                id="companyGSTIN"
+                readOnly
+                className={LOCKED_INPUT_CLASSES}
+              />
+              {errors.companyGSTIN && <p className="text-sm text-destructive mt-1">{errors.companyGSTIN.message}</p>}
             </div>
             <div>
               <Label htmlFor="companyStateCode">State Code *</Label>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Template - Standard</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 210mm;
+      min-height: 297mm;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: #000;
+      background: white;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .invoice-container {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 10mm;
+      background: white;
+    }
+
+    .header {
+      background: #1a365d;
+      color: white;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 20pt;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 9pt;
+      margin: 2px 0;
+    }
+
+    .page-type {
+      text-align: right;
+      font-size: 9pt;
+      font-weight: bold;
+      background: #f59e0b;
+      color: white;
+      padding: 8px 12px;
+      display: inline-block;
+      float: right;
+      border-radius: 4px;
+    }
+
+    .invoice-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .detail-box {
+      border: 2px solid #1a365d;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .detail-box h3 {
+      font-size: 10pt;
+      font-weight: bold;
+      color: #1a365d;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #1a365d;
+      padding-bottom: 4px;
+    }
+
+    .detail-box p {
+      font-size: 9pt;
+      margin: 4px 0;
+    }
+
+    .detail-box strong {
+      font-weight: 600;
+    }
+
+    .party-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .party-box {
+      border: 2px solid #1a365d;
+      padding: 12px;
+      min-height: 120px;
+    }
+
+    .party-box h3 {
+      font-size: 10pt;
+      font-weight: bold;
+      background: #1a365d;
+      color: white;
+      padding: 6px;
+      margin: -12px -12px 10px -12px;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+      font-size: 9pt;
+    }
+
+    .items-table th {
+      background: #1a365d;
+      color: white;
+      padding: 8px 6px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #000;
+    }
+
+    .items-table th.text-right {
+      text-align: right;
+    }
+
+    .items-table td {
+      padding: 8px 6px;
+      border: 1px solid #000;
+    }
+
+    .items-table td.text-right {
+      text-align: right;
+    }
+
+    .items-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .items-table tfoot td {
+      font-weight: bold;
+      background: #f59e0b;
+      color: white;
+      padding: 10px 6px;
+    }
+
+    .total-row {
+      font-size: 11pt;
+    }
+
+    .amount-words {
+      border: 2px solid #1a365d;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #fef3c7;
+    }
+
+    .amount-words p {
+      font-size: 9pt;
+    }
+
+    .amount-words strong {
+      font-weight: 600;
+    }
+
+    .footer-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .terms-box, .signature-box {
+      border: 2px solid #1a365d;
+      padding: 12px;
+      min-height: 100px;
+    }
+
+    .terms-box h3, .signature-box h3 {
+      font-size: 10pt;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .terms-box p {
+      font-size: 8pt;
+      white-space: pre-line;
+    }
+
+    .signature-box {
+      text-align: right;
+    }
+
+    .signature-space {
+      margin: 40px 0 10px 0;
+      border-bottom: 1px solid #000;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .invoice-container {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="page-type">{{PAGE_TYPE}} FOR RECIPIENT</div>
+      <h1>{{COMPANY_NAME}}</h1>
+      <p>{{COMPANY_ADDRESS}}</p>
+      <p>{{COMPANY_STATE}}</p>
+      <p><strong>GSTIN:</strong> {{COMPANY_GSTIN}}</p>
+      <p><strong>Email:</strong> {{COMPANY_EMAIL}}</p>
+      <p><strong>Phone:</strong> {{COMPANY_PHONE}}</p>
+    </div>
+
+    <!-- Invoice Details -->
+    <div class="invoice-details">
+      <div class="detail-box">
+        <h3>TAX INVOICE</h3>
+        <p><strong>Invoice No:</strong> {{INVOICE_NUMBER}}</p>
+        <p><strong>Invoice Date:</strong> {{INVOICE_DATE}}</p>
+      </div>
+      <div class="detail-box">
+        <h3>TRANSPORT DETAILS</h3>
+        <p><strong>Mode of Transport:</strong> {{TRANSPORT_MODE}}</p>
+        <p><strong>Vehicle Number:</strong> {{VEHICLE_NUMBER}}</p>
+      </div>
+    </div>
+
+    <!-- Party Details -->
+    <div class="party-details">
+      <div class="party-box">
+        <h3>BILLED TO</h3>
+        <p><strong>{{RECEIVER_NAME}}</strong></p>
+        <p>{{RECEIVER_ADDRESS}}</p>
+        <p>{{RECEIVER_STATE}}</p>
+        <p><strong>GSTIN:</strong> {{RECEIVER_GSTIN}}</p>
+      </div>
+      <div class="party-box">
+        <h3>SHIPPED TO</h3>
+        <p><strong>{{CONSIGNEE_NAME}}</strong></p>
+        <p>{{CONSIGNEE_ADDRESS}}</p>
+        <p>{{CONSIGNEE_STATE}}</p>
+        <p><strong>GSTIN:</strong> {{CONSIGNEE_GSTIN}}</p>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 5%;">Sr.</th>
+          <th style="width: 30%;">Description of Goods</th>
+          <th class="text-right" style="width: 8%;">HSN</th>
+          <th class="text-right" style="width: 10%;">Qty</th>
+          <th class="text-right" style="width: 10%;">Rate</th>
+          <th class="text-right" style="width: 12%;">Amount</th>
+          {{TAX_HEADERS}}
+          <th class="text-right" style="width: 12%;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ITEMS_ROWS}}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5" class="text-right">TOTAL:</td>
+          <td class="text-right">₹{{TOTAL_TAXABLE_VALUE}}</td>
+          {{TAX_TOTALS}}
+          <td class="text-right total-row">₹{{GRAND_TOTAL}}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Amount in Words -->
+    <div class="amount-words">
+      <p><strong>Amount in Words:</strong> {{AMOUNT_IN_WORDS}}</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-section">
+      <div class="terms-box">
+        <h3>Terms & Conditions</h3>
+        <p>{{TERMS_AND_CONDITIONS}}</p>
+      </div>
+      <div class="signature-box">
+        <h3>For {{COMPANY_NAME}}</h3>
+        <div class="signature-space"></div>
+        <p>Authorized Signatory</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
