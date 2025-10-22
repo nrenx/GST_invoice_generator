@@ -12,7 +12,7 @@ const InvoicePreview = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<"original" | "duplicate">("original");
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("standard");
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("professional");
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [originalHTML, setOriginalHTML] = useState<string>("");
