@@ -124,7 +124,7 @@ ${duplicateSections.body}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate("/")} className="gap-2 border-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Form
+              Back
             </Button>
             <Button variant="secondary" onClick={handleNewInvoice} className="gap-2">
               <Plus className="h-4 w-4" />
@@ -137,9 +137,7 @@ ${duplicateSections.body}
               Change Template
             </Button>
           </div>
-          <h1 className="text-xl font-bold text-center flex-1">
-            Invoice Preview - {currentPage.toUpperCase()}
-          </h1>
+          <div className="flex-1" />
           <Button onClick={handleDownloadPDF} className="gap-2" disabled={isGeneratingPdf} aria-busy={isGeneratingPdf}>
             <Download className="h-4 w-4" />
             {isGeneratingPdf ? "Preparing PDF" : "Download PDF"}
