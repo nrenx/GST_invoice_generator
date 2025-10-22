@@ -56,34 +56,37 @@ export const injectDataIntoTemplate = (
 
   // Build items rows
   const itemsRows = invoiceData.items.map((item, index) => {
-    let taxCells = '';
-    if (isInterstate) {
-      taxCells = `<td class="text-right">₹${item.igstAmount.toFixed(2)}</td>`;
-    } else {
-      taxCells = `<td class="text-right">₹${item.cgstAmount.toFixed(2)}</td><td class="text-right">₹${item.sgstAmount.toFixed(2)}</td>`;
-    }
-
     return `
       <tr>
-        <td>${index + 1}</td>
+        <td class="text-center">${index + 1}</td>
         <td>${item.description}</td>
-        <td class="text-right">${item.hsnCode}</td>
-        <td class="text-right">${item.quantity} ${item.uom}</td>
-        <td class="text-right">₹${item.rate.toFixed(2)}</td>
-        <td class="text-right">₹${item.taxableValue.toFixed(2)}</td>
-        ${taxCells}
-        <td class="text-right"><strong>₹${item.totalAmount.toFixed(2)}</strong></td>
+        <td class="text-center">${item.hsnCode}</td>
+        <td class="text-right">${item.quantity.toFixed(2)}</td>
+        <td class="text-center">${item.uom}</td>
+        <td class="text-right">${item.rate.toFixed(2)}</td>
+        <td class="text-right">${item.taxableValue.toFixed(2)}</td>
+        <td class="text-right">${item.taxableValue.toFixed(2)}</td>
+        <td class="text-center">${item.cgstRate > 0 ? item.cgstRate.toFixed(2) : '0.00'}</td>
+        <td class="text-right">${item.cgstAmount > 0 ? item.cgstAmount.toFixed(2) : '0.00'}</td>
+        <td class="text-center">${item.sgstRate > 0 ? item.sgstRate.toFixed(2) : '0.00'}</td>
+        <td class="text-right">${item.sgstAmount > 0 ? item.sgstAmount.toFixed(2) : '0.00'}</td>
+        <td class="text-center">${item.igstRate > 0 ? item.igstRate.toFixed(2) : '0.00'}</td>
+        <td class="text-right">${item.igstAmount > 0 ? item.igstAmount.toFixed(2) : '0.00'}</td>
+        <td class="text-right"><strong>${item.totalAmount.toFixed(2)}</strong></td>
       </tr>
     `;
   }).join('');
 
-  // Build tax totals
-  let taxTotals = '';
-  if (isInterstate) {
-    taxTotals = `<td class="text-right">₹${totalIGST.toFixed(2)}</td>`;
-  } else {
-    taxTotals = `<td class="text-right">₹${totalCGST.toFixed(2)}</td><td class="text-right">₹${totalSGST.toFixed(2)}</td>`;
-  }
+  // Calculate tax rate totals (for display in totals row)
+  const totalCGSTRate = invoiceData.items.length > 0 && totalCGST > 0 
+    ? invoiceData.items.reduce((sum, item) => item.cgstRate > 0 ? item.cgstRate : sum, 0) 
+    : 0;
+  const totalSGSTRate = invoiceData.items.length > 0 && totalSGST > 0 
+    ? invoiceData.items.reduce((sum, item) => item.sgstRate > 0 ? item.sgstRate : sum, 0) 
+    : 0;
+  const totalIGSTRate = invoiceData.items.length > 0 && totalIGST > 0 
+    ? invoiceData.items.reduce((sum, item) => item.igstRate > 0 ? item.igstRate : sum, 0) 
+    : 0;
 
   // Replace all placeholders
   let result = template
@@ -94,18 +97,21 @@ export const injectDataIntoTemplate = (
     .replace(/{{COMPANY_STATE_CODE}}/g, invoiceData.companyStateCode)
     .replace(/{{COMPANY_GSTIN}}/g, invoiceData.companyGSTIN)
     .replace(/{{COMPANY_EMAIL}}/g, invoiceData.companyEmail)
-    .replace(/{{COMPANY_PHONE}}/g, invoiceData.companyPhone)
+    .replace(/{{COMPANY_PHONE}}/g, invoiceData.companyPhone || '')
     .replace(/{{INVOICE_NUMBER}}/g, invoiceData.invoiceNumber)
     .replace(/{{INVOICE_DATE}}/g, invoiceData.invoiceDate)
     .replace(/{{INVOICE_TYPE}}/g, invoiceData.invoiceType)
     .replace(/{{SALE_TYPE}}/g, invoiceData.saleType)
     .replace(/{{REVERSE_CHARGE}}/g, invoiceData.reverseCharge)
-    .replace(/{{TRANSPORT_MODE}}/g, invoiceData.transportMode)
-    .replace(/{{VEHICLE_NUMBER}}/g, invoiceData.vehicleNumber)
-    .replace(/{{TRANSPORTER_NAME}}/g, invoiceData.transporterName)
+    .replace(/{{TRANSPORT_MODE}}/g, invoiceData.transportMode || '')
+    .replace(/{{VEHICLE_NUMBER}}/g, invoiceData.vehicleNumber || '')
+    .replace(/{{TRANSPORTER_NAME}}/g, invoiceData.transporterName || '')
+    .replace(/{{CHALLAN_NUMBER}}/g, invoiceData.challanNumber || '')
+    .replace(/{{LR_NUMBER}}/g, invoiceData.lrNumber || '')
     .replace(/{{DATE_OF_SUPPLY}}/g, invoiceData.dateOfSupply)
-    .replace(/{{PLACE_OF_SUPPLY}}/g, invoiceData.placeOfSupply)
-    .replace(/{{EWAY_BILL_NUMBER}}/g, invoiceData.eWayBillNumber)
+    .replace(/{{PLACE_OF_SUPPLY}}/g, invoiceData.placeOfSupply || '')
+    .replace(/{{PO_NUMBER}}/g, invoiceData.poNumber || '')
+    .replace(/{{EWAY_BILL_NUMBER}}/g, invoiceData.eWayBillNumber || 'Not Applicable')
     .replace(/{{RECEIVER_NAME}}/g, invoiceData.receiverName)
     .replace(/{{RECEIVER_ADDRESS}}/g, invoiceData.receiverAddress)
     .replace(/{{RECEIVER_STATE}}/g, invoiceData.receiverState)
@@ -116,19 +122,20 @@ export const injectDataIntoTemplate = (
     .replace(/{{CONSIGNEE_STATE}}/g, invoiceData.consigneeState)
     .replace(/{{CONSIGNEE_STATE_CODE}}/g, invoiceData.consigneeStateCode)
     .replace(/{{CONSIGNEE_GSTIN}}/g, invoiceData.consigneeGSTIN)
-    .replace(/{{TAX_HEADERS}}/g, taxHeaders)
     .replace(/{{ITEMS_ROWS}}/g, itemsRows)
-    .replace(/{{TAX_TOTALS}}/g, taxTotals)
     .replace(/{{TOTAL_QUANTITY}}/g, totalQuantity.toFixed(2))
     .replace(/{{TOTAL_AMOUNT}}/g, totalAmount.toFixed(2))
     .replace(/{{TOTAL_TAXABLE_VALUE}}/g, totalTaxableValue.toFixed(2))
+    .replace(/{{TOTAL_CGST_RATE}}/g, totalCGSTRate.toFixed(2))
     .replace(/{{TOTAL_CGST}}/g, totalCGST.toFixed(2))
+    .replace(/{{TOTAL_SGST_RATE}}/g, totalSGSTRate.toFixed(2))
     .replace(/{{TOTAL_SGST}}/g, totalSGST.toFixed(2))
+    .replace(/{{TOTAL_IGST_RATE}}/g, totalIGSTRate.toFixed(2))
     .replace(/{{TOTAL_IGST}}/g, totalIGST.toFixed(2))
     .replace(/{{TOTAL_TAX}}/g, totalTax.toFixed(2))
     .replace(/{{GRAND_TOTAL}}/g, grandTotal.toFixed(2))
     .replace(/{{AMOUNT_IN_WORDS}}/g, amountInWords)
-    .replace(/{{TERMS_AND_CONDITIONS}}/g, invoiceData.termsAndConditions);
+    .replace(/{{TERMS_AND_CONDITIONS}}/g, invoiceData.termsAndConditions || '');
 
   return result;
 };

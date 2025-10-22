@@ -445,11 +445,14 @@
         <div class="metadata-cell" style="width: 15%;">
           <span class="metadata-label">Challan No.</span>
         </div>
+        <div class="metadata-cell" style="width: 3%;">
+          {{CHALLAN_NUMBER}}
+        </div>
+        <div class="metadata-cell" style="width: 15%;">
+          <span class="metadata-label">Sale Type</span>
+        </div>
         <div class="metadata-cell" style="width: 18%; border-right: 2px solid #000;">
-          <div style="display: flex; justify-content: space-between;">
-            <span class="metadata-label">Sale Type</span>
-            <span class="red-text">{{SALE_TYPE}}</span>
-          </div>
+          <span class="red-text">{{SALE_TYPE}}</span>
         </div>
       </div>
       
@@ -469,11 +472,14 @@
         <div class="metadata-cell" style="width: 15%;">
           <span class="metadata-label">Transporter Name</span>
         </div>
+        <div class="metadata-cell" style="width: 3%;">
+          {{TRANSPORTER_NAME}}
+        </div>
+        <div class="metadata-cell" style="width: 15%;">
+          <span class="metadata-label">Invoice Type</span>
+        </div>
         <div class="metadata-cell" style="width: 18%; border-right: 2px solid #000;">
-          <div style="display: flex; justify-content: space-between;">
-            <span class="metadata-label">Invoice Type</span>
-            <span>{{INVOICE_TYPE}}</span>
-          </div>
+          {{INVOICE_TYPE}}
         </div>
       </div>
 
@@ -493,11 +499,14 @@
         <div class="metadata-cell" style="width: 15%;">
           <span class="metadata-label">L.R Number</span>
         </div>
+        <div class="metadata-cell" style="width: 3%;">
+          {{LR_NUMBER}}
+        </div>
+        <div class="metadata-cell" style="width: 15%;">
+          <span class="metadata-label">Reverse Charge</span>
+        </div>
         <div class="metadata-cell" style="width: 18%; border-right: 2px solid #000;">
-          <div style="display: flex; justify-content: space-between;">
-            <span class="metadata-label">Reverse Charge</span>
-            <span>{{REVERSE_CHARGE}}</span>
-          </div>
+          {{REVERSE_CHARGE}}
         </div>
       </div>
 
@@ -517,11 +526,14 @@
         <div class="metadata-cell" style="width: 15%;">
           <span class="metadata-label">P.O Number</span>
         </div>
+        <div class="metadata-cell" style="width: 3%;">
+          {{PO_NUMBER}}
+        </div>
+        <div class="metadata-cell" style="width: 15%;">
+          <span class="metadata-label">E-Way Bill No.</span>
+        </div>
         <div class="metadata-cell" style="width: 18%; border-right: 2px solid #000;">
-          <div style="display: flex; justify-content: space-between;">
-            <span class="metadata-label">E-Way Bill No.</span>
-            <span>{{EWAY_BILL_NUMBER}}</span>
-          </div>
+          {{EWAY_BILL_NUMBER}}
         </div>
       </div>
     </div>
@@ -583,38 +595,43 @@
     <table class="items-table">
       <thead>
         <tr>
-          <th rowspan="2" style="width: 4%;">Sr.<br>No.</th>
-          <th rowspan="2" style="width: 22%;">Description</th>
-          <th rowspan="2" style="width: 8%;">HSN/SAC<br>Code</th>
-          <th rowspan="2" style="width: 8%;">Quantity</th>
-          <th rowspan="2" style="width: 6%;">UOM</th>
-          <th rowspan="2" style="width: 8%;">Rate</th>
-          <th rowspan="2" style="width: 10%;">Amount</th>
+          <th rowspan="2" style="width: 3%;">Sr.<br>No.</th>
+          <th rowspan="2" style="width: 18%;">Description</th>
+          <th rowspan="2" style="width: 6%;">HSN/SAC<br>Code</th>
+          <th rowspan="2" style="width: 6%;">Quantity</th>
+          <th rowspan="2" style="width: 4%;">UOM</th>
+          <th rowspan="2" style="width: 7%;">Rate</th>
+          <th rowspan="2" style="width: 8%;">Amount</th>
           <th rowspan="2" style="width: 8%;">Taxable<br>Value</th>
           <th colspan="2" class="red-header">CGST Not Apply</th>
           <th colspan="2" class="red-header">SGST Not Apply</th>
           <th colspan="2">IGST Rate (%)</th>
-          <th rowspan="2" style="width: 10%;">Total Amount</th>
+          <th rowspan="2" style="width: 8%;">Total<br>Amount</th>
         </tr>
         <tr>
           <th style="width: 4%;">Rate<br>(%)</th>
-          <th style="width: 6%;">Amount<br>(Rs.)</th>
+          <th style="width: 5%;">Amount<br>(Rs.)</th>
           <th style="width: 4%;">Rate<br>(%)</th>
-          <th style="width: 6%;">Amount<br>(Rs.)</th>
+          <th style="width: 5%;">Amount<br>(Rs.)</th>
           <th style="width: 4%;">Rate<br>(%)</th>
-          <th style="width: 6%;">Amount<br>(Rs.)</th>
+          <th style="width: 5%;">Amount<br>(Rs.)</th>
         </tr>
       </thead>
       <tbody>
         {{ITEMS_ROWS}}
         <tr class="total-row">
           <td colspan="3" class="text-center"><strong>Total</strong></td>
-          <td class="text-right">{{TOTAL_QUANTITY}}</td>
+          <td class="text-right"><strong>{{TOTAL_QUANTITY}}</strong></td>
           <td></td>
-          <td class="text-right">Sub Total:</td>
-          <td class="text-right">{{TOTAL_AMOUNT}}</td>
-          <td class="text-right">{{TOTAL_TAXABLE_VALUE}}</td>
-          {{TAX_TOTALS}}
+          <td class="text-right"><strong>Sub Total:</strong></td>
+          <td class="text-right"><strong>{{TOTAL_AMOUNT}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_TAXABLE_VALUE}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_CGST_RATE}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_CGST}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_SGST_RATE}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_SGST}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_IGST_RATE}}</strong></td>
+          <td class="text-right"><strong>{{TOTAL_IGST}}</strong></td>
           <td class="text-right"><strong>{{GRAND_TOTAL}}</strong></td>
         </tr>
       </tbody>
