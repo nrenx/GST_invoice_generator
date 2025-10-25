@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import type { FocusEvent } from "react";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Eye, Download, Copy } from "lucide-react";
+import { AutoCompleteInput, type AutoCompleteOption } from "@/components/ui/auto-complete-input";
 import { hsnCodes, uomOptions, transportModes, indianStates } from "@/data/hsnCodes";
 import { InvoiceData, InvoiceItem } from "@/types/invoice";
 import { toast } from "sonner";
@@ -96,6 +96,24 @@ const getFormStorageKey = (profileId: string) => `invoice-form-data-${profileId}
 const DEFAULT_HSN_CODE = "4404";
 const DEFAULT_UOM = "MTS";
 const DESCRIPTION_OPTIONS = ["Casuarina Poles", "Casuarina Wood"];
+const GSTIN_SUGGESTIONS: AutoCompleteOption[] = [{ value: "UNREGISTERED" }];
+const STATE_NAME_OPTIONS: AutoCompleteOption[] = indianStates.map((state) => ({
+  value: state.name,
+  label: `${state.name} (${state.code})`,
+  keywords: [state.code],
+}));
+const STATE_CODE_OPTIONS: AutoCompleteOption[] = indianStates.map((state) => ({
+  value: state.code,
+  label: `${state.code} — ${state.name}`,
+  keywords: [state.name],
+}));
+const DESCRIPTION_SUGGESTIONS: AutoCompleteOption[] = DESCRIPTION_OPTIONS.map((description) => ({ value: description }));
+const HSN_CODE_OPTIONS: AutoCompleteOption[] = hsnCodes.map((hsn) => ({
+  value: hsn.code,
+  label: `${hsn.code} — ${hsn.description}`,
+  keywords: [hsn.description],
+}));
+const UOM_SUGGESTIONS: AutoCompleteOption[] = uomOptions.map((unit) => ({ value: unit }));
 const TERMS_TEMPLATE = "1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.";
 const LOCKED_INPUT_CLASSES = "bg-muted/40 text-muted-foreground cursor-not-allowed";
 const COMPUTED_INPUT_CLASSES = "bg-muted/30 font-medium cursor-not-allowed";
@@ -318,36 +336,19 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
   const watchSaleType = watch("saleType");
   const watchCompanyStateCode = watch("companyStateCode");
   const watchReceiverStateCode = watch("receiverStateCode");
-  const receiverGSTINValue = watch("receiverGSTIN");
-  const consigneeGSTINValue = watch("consigneeGSTIN");
-  const transportModeValue = watch("transportMode");
-  const reverseChargeValue = watch("reverseCharge");
+  const watchConsigneeStateCode = watch("consigneeStateCode");
   const receiverStateValue = watch("receiverState");
   const consigneeStateValue = watch("consigneeState");
+  const transportModeValue = watch("transportMode");
+  const reverseChargeValue = watch("reverseCharge");
   const invoiceDateValue = watch("invoiceDate");
   const dateOfSupplyValue = watch("dateOfSupply");
   const watchedItems = useWatch({ control, name: "items" });
 
   const effectiveSaleType = watchSaleType || "Interstate";
-  const receiverGSTINMode = receiverGSTINValue === "UNREGISTERED" ? "UNREGISTERED" : "GSTIN";
-  const consigneeGSTINMode = consigneeGSTINValue === "UNREGISTERED" ? "UNREGISTERED" : "GSTIN";
 
   const itemsForCalculation = Array.isArray(watchedItems) ? (watchedItems as ItemFormValue[]) : [];
   const derivedItems = itemsForCalculation.map((item) => calculateItemTotals(item, effectiveSaleType));
-
-  const handleGSTINBlur = (field: "receiverGSTIN" | "consigneeGSTIN") => (event: FocusEvent<HTMLInputElement>) => {
-    const upperValue = event.target.value.trim().toUpperCase();
-    setValue(field, upperValue, { shouldDirty: true, shouldValidate: true });
-  };
-
-  const handleGSTINModeChange = (field: "receiverGSTIN" | "consigneeGSTIN") => (value: string) => {
-    if (value === "UNREGISTERED") {
-      setValue(field, "UNREGISTERED", { shouldDirty: true, shouldValidate: true });
-      return;
-    }
-
-    setValue(field, "", { shouldDirty: true, shouldValidate: true });
-  };
 
   // Watch all form data and save to localStorage
   const watchedFormData = watch();
@@ -381,6 +382,50 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
       }
     }
   }, [watchCompanyStateCode, watchReceiverStateCode, setValue, watchSaleType]);
+
+  useEffect(() => {
+    const trimmedState = receiverStateValue?.trim();
+    if (!trimmedState) {
+      return;
+    }
+    const match = indianStates.find((state) => state.name.toLowerCase() === trimmedState.toLowerCase());
+    if (match && watchReceiverStateCode !== match.code) {
+      setValue("receiverStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [receiverStateValue, watchReceiverStateCode, setValue]);
+
+  useEffect(() => {
+    const trimmedCode = watchReceiverStateCode?.trim();
+    if (!trimmedCode) {
+      return;
+    }
+    const match = indianStates.find((state) => state.code === trimmedCode);
+    if (match && receiverStateValue !== match.name) {
+      setValue("receiverState", match.name, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [watchReceiverStateCode, receiverStateValue, setValue]);
+
+  useEffect(() => {
+    const trimmedState = consigneeStateValue?.trim();
+    if (!trimmedState) {
+      return;
+    }
+    const match = indianStates.find((state) => state.name.toLowerCase() === trimmedState.toLowerCase());
+    if (match && watchConsigneeStateCode !== match.code) {
+      setValue("consigneeStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [consigneeStateValue, watchConsigneeStateCode, setValue]);
+
+  useEffect(() => {
+    const trimmedCode = watchConsigneeStateCode?.trim();
+    if (!trimmedCode) {
+      return;
+    }
+    const match = indianStates.find((state) => state.code === trimmedCode);
+    if (match && consigneeStateValue !== match.name) {
+      setValue("consigneeState", match.name, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [watchConsigneeStateCode, consigneeStateValue, setValue]);
 
   // Auto-determine sale type based on state codes
   const determineSaleType = (companyCode: string, receiverCode: string) => {
@@ -720,28 +765,29 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
             </div>
             <div>
               <Label htmlFor="receiverGSTIN">GSTIN *</Label>
-              <div className="grid grid-cols-1 md:grid-cols-[180px,1fr] gap-2">
-                <Select
-                  value={receiverGSTINMode}
-                  onValueChange={handleGSTINModeChange("receiverGSTIN")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select GST status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UNREGISTERED">UNREGISTERED</SelectItem>
-                    <SelectItem value="GSTIN">Enter GSTIN</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  {...register("receiverGSTIN")}
-                  id="receiverGSTIN"
-                  placeholder="15-character GSTIN"
-                  readOnly={receiverGSTINMode === "UNREGISTERED"}
-                  className={receiverGSTINMode === "UNREGISTERED" ? LOCKED_INPUT_CLASSES : undefined}
-                  onBlur={handleGSTINBlur("receiverGSTIN")}
-                />
-              </div>
+              <Controller
+                control={control}
+                name="receiverGSTIN"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="receiverGSTIN"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={(nextValue) => field.onChange(nextValue.toUpperCase())}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const normalized = event.target.value.trim().toUpperCase();
+                      if (normalized !== field.value) {
+                        setValue("receiverGSTIN", normalized, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Enter GSTIN or type UNREGISTERED"
+                    options={GSTIN_SUGGESTIONS}
+                    emptyMessage="Enter GSTIN or choose UNREGISTERED"
+                  />
+                )}
+              />
               {errors.receiverGSTIN && <p className="text-sm text-destructive mt-1">{errors.receiverGSTIN.message}</p>}
             </div>
           </div>
@@ -753,31 +799,78 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="receiverState">State *</Label>
-              <Select
-                value={receiverStateValue || undefined}
-                onValueChange={(value) => {
-                  setValue("receiverState", value, { shouldDirty: true, shouldValidate: true });
-                  const state = indianStates.find((s) => s.name === value);
-                  if (state) {
-                    setValue("receiverStateCode", state.code, { shouldDirty: true, shouldValidate: true });
-                    const newSaleType = determineSaleType(watchCompanyStateCode, state.code);
-                    setValue("saleType", newSaleType, { shouldDirty: true, shouldValidate: true });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {indianStates.map(state => (
-                    <SelectItem key={state.code} value={state.name}>{state.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="receiverState"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="receiverState"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const typed = event.target.value.trim();
+                      if (!typed) {
+                        return;
+                      }
+                      const match = indianStates.find((state) => state.name.toLowerCase() === typed.toLowerCase());
+                      if (match) {
+                        setValue("receiverStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    onOptionSelect={(option) => {
+                      const match = indianStates.find((state) => state.name === option.value);
+                      if (match) {
+                        setValue("receiverStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Type or select state"
+                    options={STATE_NAME_OPTIONS}
+                    emptyMessage="No matching state"
+                  />
+                )}
+              />
+              {errors.receiverState && <p className="text-sm text-destructive mt-1">{errors.receiverState.message}</p>}
             </div>
             <div>
               <Label htmlFor="receiverStateCode">State Code *</Label>
-              <Input {...register("receiverStateCode")} id="receiverStateCode" readOnly />
+              <Controller
+                control={control}
+                name="receiverStateCode"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="receiverStateCode"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const typed = event.target.value.trim();
+                      if (!typed) {
+                        return;
+                      }
+                      const match = indianStates.find((state) => state.code === typed);
+                      if (match) {
+                        setValue("receiverState", match.name, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    onOptionSelect={(option) => {
+                      const match = indianStates.find((state) => state.code === option.value);
+                      if (match) {
+                        setValue("receiverState", match.name, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Type or select code"
+                    options={STATE_CODE_OPTIONS}
+                    emptyMessage="No matching code"
+                    inputMode="numeric"
+                  />
+                )}
+              />
+              {errors.receiverStateCode && <p className="text-sm text-destructive mt-1">{errors.receiverStateCode.message}</p>}
             </div>
           </div>
         </CardContent>
@@ -804,28 +897,29 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
             </div>
             <div>
               <Label htmlFor="consigneeGSTIN">GSTIN *</Label>
-              <div className="grid grid-cols-1 md:grid-cols-[180px,1fr] gap-2">
-                <Select
-                  value={consigneeGSTINMode}
-                  onValueChange={handleGSTINModeChange("consigneeGSTIN")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select GST status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UNREGISTERED">UNREGISTERED</SelectItem>
-                    <SelectItem value="GSTIN">Enter GSTIN</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  {...register("consigneeGSTIN")}
-                  id="consigneeGSTIN"
-                  placeholder="15-character GSTIN"
-                  readOnly={consigneeGSTINMode === "UNREGISTERED"}
-                  className={consigneeGSTINMode === "UNREGISTERED" ? LOCKED_INPUT_CLASSES : undefined}
-                  onBlur={handleGSTINBlur("consigneeGSTIN")}
-                />
-              </div>
+              <Controller
+                control={control}
+                name="consigneeGSTIN"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="consigneeGSTIN"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={(nextValue) => field.onChange(nextValue.toUpperCase())}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const normalized = event.target.value.trim().toUpperCase();
+                      if (normalized !== field.value) {
+                        setValue("consigneeGSTIN", normalized, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Enter GSTIN or type UNREGISTERED"
+                    options={GSTIN_SUGGESTIONS}
+                    emptyMessage="Enter GSTIN or choose UNREGISTERED"
+                  />
+                )}
+              />
               {errors.consigneeGSTIN && <p className="text-sm text-destructive mt-1">{errors.consigneeGSTIN.message}</p>}
             </div>
           </div>
@@ -837,29 +931,78 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="consigneeState">State *</Label>
-              <Select
-                value={consigneeStateValue || undefined}
-                onValueChange={(value) => {
-                  setValue("consigneeState", value, { shouldDirty: true, shouldValidate: true });
-                  const state = indianStates.find((s) => s.name === value);
-                  if (state) {
-                    setValue("consigneeStateCode", state.code, { shouldDirty: true, shouldValidate: true });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {indianStates.map(state => (
-                    <SelectItem key={state.code} value={state.name}>{state.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="consigneeState"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="consigneeState"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const typed = event.target.value.trim();
+                      if (!typed) {
+                        return;
+                      }
+                      const match = indianStates.find((state) => state.name.toLowerCase() === typed.toLowerCase());
+                      if (match) {
+                        setValue("consigneeStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    onOptionSelect={(option) => {
+                      const match = indianStates.find((state) => state.name === option.value);
+                      if (match) {
+                        setValue("consigneeStateCode", match.code, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Type or select state"
+                    options={STATE_NAME_OPTIONS}
+                    emptyMessage="No matching state"
+                  />
+                )}
+              />
+              {errors.consigneeState && <p className="text-sm text-destructive mt-1">{errors.consigneeState.message}</p>}
             </div>
             <div>
               <Label htmlFor="consigneeStateCode">State Code *</Label>
-              <Input {...register("consigneeStateCode")} id="consigneeStateCode" readOnly />
+              <Controller
+                control={control}
+                name="consigneeStateCode"
+                render={({ field }) => (
+                  <AutoCompleteInput
+                    id="consigneeStateCode"
+                    name={field.name}
+                    ref={field.ref}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      const typed = event.target.value.trim();
+                      if (!typed) {
+                        return;
+                      }
+                      const match = indianStates.find((state) => state.code === typed);
+                      if (match) {
+                        setValue("consigneeState", match.name, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    onOptionSelect={(option) => {
+                      const match = indianStates.find((state) => state.code === option.value);
+                      if (match) {
+                        setValue("consigneeState", match.name, { shouldDirty: true, shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Type or select code"
+                    options={STATE_CODE_OPTIONS}
+                    emptyMessage="No matching code"
+                    inputMode="numeric"
+                  />
+                )}
+              />
+              {errors.consigneeStateCode && <p className="text-sm text-destructive mt-1">{errors.consigneeStateCode.message}</p>}
             </div>
           </div>
         </CardContent>
@@ -875,10 +1018,6 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
           {fields.map((field, index) => {
             const currentItem = itemsForCalculation[index] ?? buildDefaultItem();
             const derivedItem = derivedItems[index];
-            const descriptionValue = typeof currentItem?.description === "string" ? currentItem.description : "";
-            const descriptionSelectValue = DESCRIPTION_OPTIONS.includes(descriptionValue) ? descriptionValue : "CUSTOM";
-            const hsnValue = currentItem?.hsnCode || DEFAULT_HSN_CODE;
-            const uomValue = currentItem?.uom || DEFAULT_UOM;
             const gstRateLabel = derivedItem
               ? effectiveSaleType === "Intrastate"
                 ? `CGST ${derivedItem.cgstRate}% + SGST ${derivedItem.sgstRate}%`
@@ -900,83 +1039,86 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2 space-y-2">
                     <Label>Description *</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-2">
-                      <Select
-                        value={descriptionSelectValue}
-                        onValueChange={(value) => {
-                          if (value === "CUSTOM") {
-                            if (DESCRIPTION_OPTIONS.includes(descriptionValue)) {
-                              setValue(`items.${index}.description`, "", { shouldDirty: true, shouldValidate: true });
-                            }
-                            return;
-                          }
-
-                          setValue(`items.${index}.description`, value, { shouldDirty: true, shouldValidate: true });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose description" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DESCRIPTION_OPTIONS.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="CUSTOM">Custom item</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        {...register(`items.${index}.description` as const)}
-                        placeholder="Enter item description"
-                      />
-                    </div>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.description` as const}
+                      render={({ field }) => (
+                        <AutoCompleteInput
+                          id={`item-${index}-description`}
+                          name={field.name}
+                          ref={field.ref}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={() => field.onBlur()}
+                          placeholder="Enter item description"
+                          options={DESCRIPTION_SUGGESTIONS}
+                          emptyMessage="No matching description"
+                        />
+                      )}
+                    />
                     {errors.items?.[index]?.description && (
                       <p className="text-sm text-destructive mt-1">{errors.items[index]?.description?.message}</p>
                     )}
                   </div>
                   <div>
                     <Label>HSN/SAC Code *</Label>
-                    <Select
-                      value={hsnValue}
-                      onValueChange={(value) => {
-                        setValue(`items.${index}.hsnCode`, value, { shouldDirty: true, shouldValidate: true });
-                        const hsn = hsnCodes.find((h) => h.code === value);
-                        if (hsn) {
-                          setValue(`items.${index}.rate`, hsn.rate, { shouldDirty: true, shouldValidate: true });
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select HSN code" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hsnCodes.map((hsn) => (
-                          <SelectItem key={hsn.code} value={hsn.code}>
-                            {hsn.code} - {hsn.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.hsnCode` as const}
+                      render={({ field }) => (
+                        <AutoCompleteInput
+                          id={`item-${index}-hsn`}
+                          name={field.name}
+                          ref={field.ref}
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value.toUpperCase())}
+                          onBlur={(event) => {
+                            field.onBlur();
+                            const typed = event.target.value.trim().toUpperCase();
+                            if (!typed) {
+                              return;
+                            }
+                            const match = hsnCodes.find((hsn) => hsn.code === typed);
+                            if (match) {
+                              setValue(`items.${index}.hsnCode`, match.code, { shouldDirty: true, shouldValidate: true });
+                              setValue(`items.${index}.rate`, match.rate, { shouldDirty: true, shouldValidate: true });
+                            }
+                          }}
+                          onOptionSelect={(option) => {
+                            const match = hsnCodes.find((hsn) => hsn.code === option.value);
+                            if (match) {
+                              setValue(`items.${index}.rate`, match.rate, { shouldDirty: true, shouldValidate: true });
+                            }
+                          }}
+                          placeholder="Enter HSN/SAC code"
+                          options={HSN_CODE_OPTIONS}
+                          emptyMessage="No matching HSN code"
+                        />
+                      )}
+                    />
                     {errors.items?.[index]?.hsnCode && (
                       <p className="text-sm text-destructive mt-1">{errors.items[index]?.hsnCode?.message}</p>
                     )}
                   </div>
                   <div>
                     <Label>UOM *</Label>
-                    <Select
-                      value={uomValue}
-                      onValueChange={(value) => setValue(`items.${index}.uom`, value, { shouldDirty: true, shouldValidate: true })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select UOM" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {uomOptions.map((uom) => (
-                          <SelectItem key={uom} value={uom}>{uom}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.uom` as const}
+                      render={({ field }) => (
+                        <AutoCompleteInput
+                          id={`item-${index}-uom`}
+                          name={field.name}
+                          ref={field.ref}
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value.toUpperCase())}
+                          onBlur={() => field.onBlur()}
+                          placeholder="Enter unit of measure"
+                          options={UOM_SUGGESTIONS}
+                          emptyMessage="No matching unit"
+                        />
+                      )}
+                    />
                     {errors.items?.[index]?.uom && (
                       <p className="text-sm text-destructive mt-1">{errors.items[index]?.uom?.message}</p>
                     )}
