@@ -28,7 +28,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidPhone(phone: string): boolean {
   const phoneRegex = /^[6-9]\d{9}$/;
-  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  const cleanPhone = phone.replace(/[\s-()]/g, '');
   return phoneRegex.test(cleanPhone);
 }
 

@@ -1,6 +1,6 @@
 import { InvoiceData } from "@/types/invoice";
 
-export type TemplateType = "standard" | "modern" | "professional" | "eway" | "antique";
+export type TemplateType = "standard" | "professional" | "eway" | "antique";
 
 export const loadTemplate = async (templateType: TemplateType): Promise<string> => {
   const basePath = import.meta.env.BASE_URL ?? "/";

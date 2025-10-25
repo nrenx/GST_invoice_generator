@@ -1,12 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { InvoiceData } from "@/types/invoice";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
+import { ArrowLeft, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
 import { TemplateSelector } from "@/components/TemplateSelector";
 import { loadTemplate, injectDataIntoTemplate, TemplateType } from "@/lib/templateLoader";
 import { generateAndDownloadPDF } from "@/lib/pdfGenerator";
+import type { InvoiceData } from "@/types/invoice";
 
 const InvoicePreview = () => {
   const location = useLocation();
@@ -17,15 +18,20 @@ const InvoicePreview = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [originalHTML, setOriginalHTML] = useState<string>("");
   const [duplicateHTML, setDuplicateHTML] = useState<string>("");
-  const invoiceData = location.state as InvoiceData;
+  const invoiceData = location.state as InvoiceData | undefined;
 
-  if (!invoiceData) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!invoiceData) {
+      navigate("/");
+    }
+  }, [invoiceData, navigate]);
 
   // Load and inject data into templates
   useEffect(() => {
+    if (!invoiceData) {
+      return;
+    }
+
     const loadTemplates = async () => {
       try {
         const templateHTML = await loadTemplate(selectedTemplate);
@@ -40,6 +46,10 @@ const InvoicePreview = () => {
     };
     loadTemplates();
   }, [selectedTemplate, invoiceData]);
+
+  if (!invoiceData) {
+    return null;
+  }
 
   const handleDownloadPDF = async () => {
     if (isGeneratingPdf) {

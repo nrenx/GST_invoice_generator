@@ -1,15 +1,8 @@
 import { TemplateTheme, TemplateOptions } from '@/types/invoice';
 
-export const DEFAULT_THEMES: Record<string, TemplateTheme> = {
-  modern: {
-    primaryColor: '#2563eb',
-    secondaryColor: '#64748b',
-    accentColor: '#f59e0b',
-    fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    headerFontSize: '24px',
-    bodyFontSize: '12px',
-    borderStyle: '1px solid #e2e8f0'
-  },
+type ThemedTemplate = 'standard' | 'professional';
+
+export const DEFAULT_THEMES: Record<ThemedTemplate, TemplateTheme> = {
   standard: {
     primaryColor: '#2F5061',
     secondaryColor: '#4A5568',
@@ -46,7 +39,7 @@ export const DEFAULT_OPTIONS: TemplateOptions = {
  * @param templateType - The template type
  * @returns Theme configuration
  */
-export function getTemplateTheme(templateType: 'standard' | 'modern' | 'professional'): TemplateTheme {
+export function getTemplateTheme(templateType: ThemedTemplate): TemplateTheme {
   return DEFAULT_THEMES[templateType] || DEFAULT_THEMES.standard;
 }
 

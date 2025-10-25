@@ -86,7 +86,7 @@ export interface InvoiceValidationError {
   field: string;
   message: string;
   severity: 'error' | 'warning' | 'info';
-  value?: any;
+  value?: unknown;
   suggestion?: string;
 }
 

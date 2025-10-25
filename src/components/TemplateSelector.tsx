@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Sparkles, Briefcase, Truck, Scroll } from "lucide-react";
+import { FileText, Briefcase, Truck, Scroll } from "lucide-react";
 
 interface TemplateSelectorProps {
   open: boolean;
   onClose: () => void;
-  onSelectTemplate: (template: "standard" | "modern" | "professional" | "eway" | "antique") => void;
+  onSelectTemplate: (template: "standard" | "professional" | "eway" | "antique") => void;
 }
 
 export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSelectorProps) => {
@@ -16,9 +16,9 @@ export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSe
         <DialogHeader>
           <DialogTitle className="text-2xl">Choose Invoice Template</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-accent"
             onClick={() => onSelectTemplate("professional")}
           >
@@ -34,7 +34,7 @@ export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSe
             </div>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-accent"
             onClick={() => onSelectTemplate("standard")}
           >
@@ -50,23 +50,7 @@ export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSe
             </div>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-accent"
-            onClick={() => onSelectTemplate("modern")}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-accent" />
-              </div>
-              <h3 className="text-xl font-semibold">Modern Template</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Clean, contemporary design with enhanced visual appeal
-              </p>
-              <Button variant="secondary" className="w-full">Select</Button>
-            </div>
-          </Card>
-
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-accent"
             onClick={() => onSelectTemplate("eway")}
           >
@@ -82,7 +66,7 @@ export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSe
             </div>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-accent"
             onClick={() => onSelectTemplate("antique")}
           >
