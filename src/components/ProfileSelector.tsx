@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import { Plus, User } from "lucide-react";
+import { Plus, User, RotateCcw } from "lucide-react";
 import { Profile } from "@/types/profile";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ProfileSelectorProps {
   profiles: Profile[];
   onSelectProfile: (profileId: string) => void;
+  onResetToDefaults?: () => void;
 }
 
-export const ProfileSelector = ({ profiles, onSelectProfile }: ProfileSelectorProps) => {
+export const ProfileSelector = ({ profiles, onSelectProfile, onResetToDefaults }: ProfileSelectorProps) => {
   const navigate = useNavigate();
 
   const handleProfileClick = (profileId: string) => {
@@ -18,6 +21,13 @@ export const ProfileSelector = ({ profiles, onSelectProfile }: ProfileSelectorPr
 
   const handleCustomizeClick = () => {
     navigate("/profile/new");
+  };
+
+  const handleResetToDefaults = () => {
+    if (onResetToDefaults) {
+      onResetToDefaults();
+      toast.success("Profiles reset to defaults successfully!");
+    }
   };
 
   return (
@@ -31,6 +41,18 @@ export const ProfileSelector = ({ profiles, onSelectProfile }: ProfileSelectorPr
           <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto">
             Choose a profile to begin creating invoices with pre-filled company details
           </p>
+          {onResetToDefaults && (
+            <div className="pt-2">
+              <Button
+                onClick={handleResetToDefaults}
+                variant="outline"
+                className="gap-2 bg-background/10 hover:bg-background/20 text-primary-foreground border-primary-foreground/30 hover:border-primary-foreground/50"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset to Default Profiles
+              </Button>
+            </div>
+          )}
         </div>
         
         {/* Profiles Grid */}

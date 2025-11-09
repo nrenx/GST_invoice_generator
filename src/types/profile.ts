@@ -23,32 +23,32 @@ export const DEFAULT_PROFILES: Profile[] = [
     id: 'narendra',
     name: 'Narendra',
     companyDetails: {
-      companyName: 'Narendra Enterprises',
-      address: '123 Business Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      stateCode: '27',
-      pincode: '400001',
-      gstin: '27AAAAA0000A1Z5',
-      email: 'narendra@example.com',
-      phone: '+91 9876543210'
+      companyName: 'KAVERI TRADERS',
+      address: '191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409',
+      city: 'Tirupati',
+      state: 'Andhra Pradesh',
+      stateCode: '37',
+      pincode: '524409',
+      gstin: '37HERPB7733F1Z5',
+      email: 'kotidarisetty7777@gmail.com',
+      phone: ''
     },
-    termsAndConditions: 'Payment due within 30 days.\nGoods once sold cannot be returned.\nSubject to Mumbai jurisdiction.'
+    termsAndConditions: '1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.'
   },
   {
     id: 'raja',
     name: 'Raja',
     companyDetails: {
-      companyName: 'Raja Trading Co.',
-      address: '456 Commerce Road',
-      city: 'Delhi',
-      state: 'Delhi',
-      stateCode: '07',
-      pincode: '110001',
-      gstin: '07BBBBB0000B1Z5',
-      email: 'raja@example.com',
-      phone: '+91 9876543211'
+      companyName: 'SRI VENKATESWARA TRADERS',
+      address: 'Flat No. 175, EDALAPALLI (V), Gudur Mandal, Tirupati Dist., A.P',
+      city: 'Gudur',
+      state: 'Andhra Pradesh',
+      stateCode: '37',
+      pincode: '524409',
+      gstin: '37ENTPB8227G2ZL',
+      email: '',
+      phone: '8106332018'
     },
-    termsAndConditions: 'Payment terms: Net 45 days.\nInterest @18% p.a. on delayed payments.\nSubject to Delhi jurisdiction.'
+    termsAndConditions: '1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.'
   }
 ];

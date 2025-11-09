@@ -117,6 +117,34 @@ export const injectDataIntoTemplate = (
     ? invoiceData.items.reduce((sum, item) => item.igstRate > 0 ? item.igstRate : sum, 0) 
     : 0;
 
+  // Build company contact info dynamically based on template type
+  const companyContactParts: string[] = [];
+  if (invoiceData.companyEmail && invoiceData.companyEmail.trim()) {
+    companyContactParts.push(`Email: ${invoiceData.companyEmail}`);
+  }
+  if (invoiceData.companyPhone && invoiceData.companyPhone.trim()) {
+    companyContactParts.push(`Phone: ${invoiceData.companyPhone}`);
+  }
+  
+  // Detect template type and format accordingly
+  let companyContactInfo = '';
+  if (companyContactParts.length > 0) {
+    if (template.includes('class="header"') || template.includes('<!-- Header -->')) {
+      // Standard template uses <p> tags
+      companyContactInfo = companyContactParts.map(part => `<p><strong>${part}</strong></p>`).join('\n      ');
+    } else if (template.includes('class="company-info"') || template.includes('class="detail-label"')) {
+      // Professional template uses div with detail-label/detail-value
+      const formattedParts = companyContactParts.map(part => {
+        const [label, value] = part.split(': ');
+        return `<span class="detail-label">${label}:</span> <span class="detail-value">${value}</span>`;
+      });
+      companyContactInfo = `<div>${formattedParts.join(' | ')}</div>`;
+    } else {
+      // Eway/Antique templates use inline with <strong>
+      companyContactInfo = `<strong>${companyContactParts.join('</strong> | <strong>')}</strong>`;
+    }
+  }
+
   // Replace all placeholders
   let result = template
     .replace(/{{PAGE_TYPE}}/g, pageType)
@@ -127,6 +155,7 @@ export const injectDataIntoTemplate = (
     .replace(/{{COMPANY_GSTIN}}/g, invoiceData.companyGSTIN)
     .replace(/{{COMPANY_EMAIL}}/g, invoiceData.companyEmail)
     .replace(/{{COMPANY_PHONE}}/g, invoiceData.companyPhone || '')
+    .replace(/{{COMPANY_CONTACT_INFO}}/g, companyContactInfo)
     .replace(/{{INVOICE_NUMBER}}/g, invoiceData.invoiceNumber)
     .replace(/{{INVOICE_DATE}}/g, invoiceData.invoiceDate)
     .replace(/{{INVOICE_TYPE}}/g, invoiceData.invoiceType)

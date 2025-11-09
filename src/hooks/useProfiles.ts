@@ -59,6 +59,13 @@ export const useProfiles = () => {
     return profiles.find(p => p.id === selectedProfileId) || null;
   };
 
+  const resetToDefaults = () => {
+    setProfiles(DEFAULT_PROFILES);
+    localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(DEFAULT_PROFILES));
+    setSelectedProfileId(null);
+    localStorage.removeItem(SELECTED_PROFILE_KEY);
+  };
+
   return {
     profiles,
     selectedProfileId,
@@ -67,6 +74,7 @@ export const useProfiles = () => {
     addProfile,
     updateProfile,
     deleteProfile,
-    selectProfile
+    selectProfile,
+    resetToDefaults
   };
 };

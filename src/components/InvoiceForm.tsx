@@ -44,7 +44,7 @@ const invoiceSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   companyAddress: z.string().min(1, "Company address is required"),
   companyGSTIN: gstinSchema,
-  companyEmail: z.string().email("Valid email is required"),
+  companyEmail: z.string().optional().transform(val => val?.trim() || ""),
   companyPhone: z.string().optional(),
   companyState: z.string().min(1, "State is required"),
   companyStateCode: z.string().min(1, "State code is required"),
@@ -207,7 +207,7 @@ const buildBaseDefaults = (profile?: Profile): InvoiceFormData => {
     companyName: profile?.companyDetails.companyName || "KAVERI TRADERS",
     companyAddress: profile?.companyDetails.address || "191, Guduru, Pagadalapalli, Idulapalli, Tirupati, Andhra Pradesh - 524409",
     companyGSTIN: profile?.companyDetails.gstin || "37HERPB7733F1Z5",
-    companyEmail: profile?.companyDetails.email || "kotidarisetty7777@gmail.com",
+    companyEmail: profile?.companyDetails.email || "",
     companyPhone: profile?.companyDetails.phone || "",
     companyState: profile?.companyDetails.state || "Andhra Pradesh",
     companyStateCode: profile?.companyDetails.stateCode || "37",
@@ -608,7 +608,7 @@ export const InvoiceForm = ({ profile }: InvoiceFormProps) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="companyEmail">Email *</Label>
+              <Label htmlFor="companyEmail">Email</Label>
               <Input
                 {...register("companyEmail")}
                 type="email"
