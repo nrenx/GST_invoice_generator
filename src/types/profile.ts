@@ -30,7 +30,7 @@ export const DEFAULT_PROFILES: Profile[] = [
       stateCode: '37',
       pincode: '524409',
       gstin: '37HERPB7733F1Z5',
-      email: 'kotidarisetty7777@gmail.com',
+      email: 'bollineninarendragst@gmail.com',
       phone: ''
     },
     termsAndConditions: '1. This is an electronically generated invoice.\n2. All disputes are subject to GUDUR jurisdiction only.\n3. If the Consignee makes any Inter State Sale, he has to pay GST himself.\n4. Goods once sold cannot be taken back or exchanged.\n5. Payment terms as per agreement between buyer and seller.'

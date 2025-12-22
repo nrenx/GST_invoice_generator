@@ -59,6 +59,7 @@ npm run lint
 src/
 	pages/               Route-level components (invoice form, preview, profiles)
 	components/          Reusable UI and domain components
+	  invoice-form/      Modular invoice form components
 	lib/                 PDF generation and template utilities
 	data/                HSN codes, transport modes, state codes
 	hooks/               Profile persistence and responsive helpers
@@ -66,6 +67,44 @@ src/
 public/templates/      HTML invoice templates injected with runtime data
 server/                (Optional) backend helpers for future expansion
 ```
+
+### Invoice Form Components
+
+The invoice form is organized into focused, maintainable modules:
+
+```
+src/components/invoice-form/
+├── index.ts                    # Main exports
+├── constants.ts                # All static values, regex, options
+├── types.ts                    # Zod schemas, TypeScript types
+├── utils.ts                    # Helper functions, formatters, calculations
+├── InvoiceForm.tsx             # Main orchestrator component
+└── sections/
+    ├── index.ts                # Section exports
+    ├── CompanyDetailsSection.tsx
+    ├── InvoiceMetadataSection.tsx
+    ├── TransportDetailsSection.tsx
+    ├── ReceiverDetailsSection.tsx
+    ├── ConsigneeDetailsSection.tsx
+    ├── InvoiceItemsSection.tsx
+    ├── TermsAndConditionsSection.tsx
+    └── FormActionButtons.tsx
+```
+
+| File | Purpose |
+|------|---------|
+| `constants.ts` | GSTIN regex, HSN options, state lookups, CSS classes |
+| `types.ts` | Zod validation schemas, form data types |
+| `utils.ts` | Date formatters, currency formatter, tax calculations |
+| `InvoiceForm.tsx` | Connects all sections, manages form state |
+| `CompanyDetailsSection` | Shows company name, GSTIN, address (locked from profile) |
+| `InvoiceMetadataSection` | Invoice number, dates, sale type selector |
+| `TransportDetailsSection` | Vehicle, transporter, e-way bill fields |
+| `ReceiverDetailsSection` | Customer billing info with state autocomplete |
+| `ConsigneeDetailsSection` | Shipping info with "Copy from Receiver" button |
+| `InvoiceItemsSection` | Add/remove items with HSN lookup and tax calculations |
+| `TermsAndConditionsSection` | Editable terms textarea |
+| `FormActionButtons` | New Invoice (clear) and Preview buttons |
 
 ## Customization Guide
 

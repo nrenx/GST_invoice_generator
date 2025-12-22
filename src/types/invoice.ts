@@ -83,37 +83,6 @@ export interface InvoiceData {
   additionalCharges?: number;
 }
 
-// Validation types
-export interface InvoiceValidationError {
-  field: string;
-  message: string;
-  severity: 'error' | 'warning' | 'info';
-  value?: unknown;
-  suggestion?: string;
-}
-
-// Template configuration types
-export interface TemplateTheme {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  fontFamily: string;
-  headerFontSize: string;
-  bodyFontSize: string;
-  borderStyle: string;
-}
-
-export interface TemplateOptions {
-  showLogo: boolean;
-  showBankDetails: boolean;
-  showQRCode: boolean;
-  showSignature: boolean;
-  showTerms: boolean;
-  showTransportDetails: boolean;
-  compactMode: boolean;
-  colorScheme: 'default' | 'minimal' | 'vibrant';
-}
-
 export interface HSNCode {
   code: string;
   description: string;

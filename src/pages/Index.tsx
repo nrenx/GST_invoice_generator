@@ -1,4 +1,4 @@
-import { InvoiceForm } from "@/components/InvoiceForm";
+import { InvoiceForm } from "@/components/invoice-form";
 import { FileText, User } from "lucide-react";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useNavigate } from "react-router-dom";

@@ -35,8 +35,8 @@ const InvoicePreview = () => {
     const loadTemplates = async () => {
       try {
         const templateHTML = await loadTemplate(selectedTemplate);
-        const originalRendered = injectDataIntoTemplate(templateHTML, invoiceData, "ORIGINAL");
-        const duplicateRendered = injectDataIntoTemplate(templateHTML, invoiceData, "DUPLICATE");
+        const originalRendered = await injectDataIntoTemplate(templateHTML, invoiceData, "ORIGINAL");
+        const duplicateRendered = await injectDataIntoTemplate(templateHTML, invoiceData, "DUPLICATE");
         setOriginalHTML(originalRendered);
         setDuplicateHTML(duplicateRendered);
       } catch (error) {
