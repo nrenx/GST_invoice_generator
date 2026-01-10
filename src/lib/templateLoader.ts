@@ -1,6 +1,6 @@
 import { InvoiceData } from "@/types/invoice";
 
-export type TemplateType = "standard" | "professional" | "composition";
+export type TemplateType = "standard" | "professional" | "composition" | "interstate";
 
 export const loadTemplate = async (templateType: TemplateType): Promise<string> => {
   const basePath = import.meta.env.BASE_URL ?? "/";
@@ -235,6 +235,29 @@ export const injectDataIntoTemplate = (
       .replace(/{{COMPOSITION_ITEMS_ROWS}}/g, compositionItemsRows)
       .replace(/{{GRAND_TOTAL}}/g, compositionGrandTotal.toFixed(2))
       .replace(/{{AMOUNT_IN_WORDS}}/g, compositionAmountInWords);
+  }
+
+  // Handle interstate template (IGST-only layout)
+  const hasInterstatePlaceholder = template.includes("{{INTERSTATE_ITEMS_ROWS}}");
+  if (hasInterstatePlaceholder) {
+    const interstateItemsRows = invoiceData.items.map((item, index) => {
+      return `
+        <tr>
+          <td class="text-center">${index + 1}</td>
+          <td>${item.description}</td>
+          <td class="text-center">${item.hsnCode}</td>
+          <td class="text-right">${item.quantity.toFixed(2)}</td>
+          <td class="text-center">${item.uom}</td>
+          <td class="text-right">${formatCurrency(item.rate)}</td>
+          <td class="text-right">${formatCurrency(item.taxableValue)}</td>
+          <td class="text-center">${item.igstRate.toFixed(2)}</td>
+          <td class="text-right">${formatCurrency(item.igstAmount)}</td>
+          <td class="text-right"><strong>${formatCurrency(item.totalAmount)}</strong></td>
+        </tr>
+      `;
+    }).join('');
+    
+    result = result.replace(/{{INTERSTATE_ITEMS_ROWS}}/g, interstateItemsRows);
   }
 
   return result;

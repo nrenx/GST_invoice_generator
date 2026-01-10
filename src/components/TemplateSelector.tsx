@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Briefcase, Store } from "lucide-react";
+import { FileText, Briefcase, Store, Truck } from "lucide-react";
 
 interface TemplateSelectorProps {
   open: boolean;
   onClose: () => void;
-  onSelectTemplate: (template: "standard" | "professional" | "composition") => void;
+  onSelectTemplate: (template: "standard" | "professional" | "composition" | "interstate") => void;
 }
 
 export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSelectorProps) => {
@@ -65,6 +65,25 @@ export const TemplateSelector = ({ open, onClose, onSelectTemplate }: TemplateSe
               <div className="w-full space-y-1">
                 <Button variant="outline" className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50">Select</Button>
                 <p className="text-xs text-emerald-600 text-center font-medium">For Small Businesses</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-shadow p-6 border-2 hover:border-slate-600"
+            onClick={() => onSelectTemplate("interstate")}
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-slate-700/10 flex items-center justify-center">
+                <Truck className="w-8 h-8 text-slate-700" />
+              </div>
+              <h3 className="text-xl font-semibold">Interstate Supply</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Tax Invoice for Interstate Transport with IGST, E-Way Bill & Vehicle Details
+              </p>
+              <div className="w-full space-y-1">
+                <Button variant="outline" className="w-full border-slate-600 text-slate-700 hover:bg-slate-50">Select</Button>
+                <p className="text-xs text-slate-600 text-center font-medium">Cross-State Sales</p>
               </div>
             </div>
           </Card>

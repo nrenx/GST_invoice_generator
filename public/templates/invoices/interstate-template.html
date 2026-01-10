@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Invoice - {{INVOICE_NUMBER}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      line-height: 1.2;
+      color: #000;
+      background: #fff;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 6mm;
+      margin: 0 auto;
+      background: #fff;
+      position: relative;
+      border: 2px solid #000;
+    }
+
+    /* Interstate Supply Indicator Banner */
+    .interstate-banner {
+      background: #334155;
+      color: #fff;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border: 2px solid #000;
+      border-bottom: none;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .interstate-badge {
+      background: #475569;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* Page Type Bar */
+    .header-bar {
+      background: #334155;
+      color: #fff;
+      text-align: center;
+      padding: 4px 0;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border: 2px solid #000;
+      border-top: none;
+      border-bottom: none;
+      text-transform: uppercase;
+    }
+
+    /* Company Header */
+    .company-header {
+      background: #334155;
+      color: #fff;
+      text-align: center;
+      padding: 14px 0 12px;
+      border: 2px solid #000;
+      border-top: none;
+      border-bottom: 2px solid #000;
+    }
+
+    .company-name {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Company Details with QR Code */
+    .company-details {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #f8fafc;
+      border: 2px solid #000;
+      border-top: none;
+      padding: 10px 12px;
+      min-height: 70px;
+    }
+
+    .company-info {
+      text-align: left;
+      flex: 1;
+    }
+
+    .company-info div {
+      margin: 4px 0;
+      font-size: 14px;
+    }
+
+    .company-details .detail-label {
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .company-details .detail-value {
+      font-weight: 700;
+    }
+
+    .company-qr {
+      min-width: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .company-qr img {
+      width: 90px;
+      height: 90px;
+      border: 2px solid #334155;
+      padding: 4px;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    /* Invoice Title Section */
+    .invoice-title-section {
+      display: table;
+      width: 100%;
+      border: 2px solid #000;
+      border-top: none;
+      background: #f1f5f9;
+    }
+
+    .invoice-title-left {
+      display: table-cell;
+      width: 55%;
+      padding: 8px 10px;
+      font-size: 22px;
+      font-weight: bold;
+      border-right: 2px solid #000;
+      letter-spacing: 1px;
+      text-align: center;
+      vertical-align: middle;
+      color: #334155;
+    }
+
+    .invoice-title-right {
+      display: table-cell;
+      width: 45%;
+      padding: 4px 8px;
+      font-size: 9px;
+      text-align: center;
+      line-height: 1.3;
+      vertical-align: middle;
+    }
+
+    .invoice-title-right div {
+      margin: 1px 0;
+    }
+
+    .invoice-title-right .supply-type {
+      color: #334155;
+      font-weight: bold;
+      font-size: 11px;
+      background: #e2e8f0;
+      padding: 2px 8px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 3px;
+    }
+
+    /* Metadata Grid - Enhanced Transport Section */
+    .metadata-section {
+      border: 2px solid #000;
+      border-top: none;
+    }
+
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 10px;
+    }
+
+    .metadata-table td {
+      border: 1px solid #000;
+      padding: 5px 8px;
+      vertical-align: middle;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .metadata-label-cell {
+      font-weight: bold;
+      width: 13%;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .metadata-value-cell {
+      width: 12%;
+      padding-left: 6px;
+    }
+
+    .metadata-highlight {
+      color: #334155;
+      font-weight: bold;
+    }
+
+    /* Party Details Table */
+    .party-table {
+      width: 100%;
+      border: 2px solid #000;
+      border-top: none;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .party-table th {
+      background: #e2e8f0;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px;
+      border: 1px solid #000;
+      font-size: 11px;
+      color: #334155;
+    }
+
+    .party-table th + th {
+      border-left-width: 2px;
+    }
+
+    .party-table td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 0;
+    }
+
+    .party-table td + td {
+      border-left-width: 2px;
+    }
+
+    .party-info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    .party-info-table th,
+    .party-info-table td {
+      border-bottom: 1px solid #000;
+      padding: 4px 6px;
+      text-align: left;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .party-info-table th {
+      width: 32%;
+      font-weight: bold;
+      border-right: 1px solid #000;
+      background: #f8fafc;
+      color: #334155;
+    }
+
+    .party-info-table td {
+      border-right: none;
+    }
+
+    .party-info-table tr:last-child th,
+    .party-info-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Items Table - IGST Only Layout for Interstate */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #000;
+      border-top: none;
+      font-size: 9px;
+      table-layout: fixed;
+    }
+
+    .items-table th {
+      background: #e2e8f0;
+      border: 1px solid #000;
+      padding: 5px 3px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 9px;
+      color: #334155;
+    }
+
+    .items-table td {
+      border: 1px solid #000;
+      padding: 4px 3px;
+      text-align: left;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .items-table .text-right {
+      text-align: right;
+    }
+
+    .items-table .text-center {
+      text-align: center;
+    }
+
+    .blank-item-row td {
+      height: 20px;
+    }
+
+    .total-row {
+      background: #f1f5f9;
+      font-weight: bold;
+    }
+
+    /* Summary Section */
+    .summary-table {
+      width: 100%;
+      border: 2px solid #000;
+      border-top: none;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .summary-table td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 0;
+    }
+
+    .summary-left-cell {
+      width: 55%;
+      border-right: 2px solid #000;
+    }
+
+    .summary-right-cell {
+      width: 45%;
+    }
+
+    .amount-words-section {
+      background: #f1f5f9;
+      font-weight: bold;
+      padding: 6px 8px;
+      border-bottom: 2px solid #000;
+      font-size: 11px;
+      text-transform: uppercase;
+      text-align: center;
+      color: #334155;
+    }
+
+    .amount-words-value {
+      padding: 6px 8px;
+      border-bottom: 2px solid #000;
+      min-height: 30px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .terms-section {
+      background: #f1f5f9;
+      font-weight: bold;
+      padding: 6px 8px;
+      border-bottom: 2px solid #000;
+      font-size: 11px;
+      text-transform: uppercase;
+      text-align: center;
+      color: #334155;
+    }
+
+    .terms-content {
+      padding: 6px 8px 8px;
+      font-size: 11px;
+      line-height: 1.4;
+      min-height: 80px;
+      white-space: pre-line;
+    }
+
+    .terms-content ol {
+      margin-left: 18px;
+      margin-top: 4px;
+    }
+
+    .terms-content li {
+      margin: 2px 0;
+    }
+
+    /* Tax Summary Table - IGST Focus */
+    .tax-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    .tax-summary-table td {
+      border-bottom: 1px solid #000;
+      padding: 5px 8px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .tax-summary-table td:first-child {
+      font-weight: bold;
+      border-right: 1px solid #000;
+      width: 55%;
+      background: #f8fafc;
+    }
+
+    .tax-summary-table td:last-child {
+      text-align: right;
+      width: 45%;
+    }
+
+    .tax-summary-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tax-summary-table .grand-total-row td {
+      background: #334155;
+      color: #fff;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    /* Reverse Charge Notice */
+    .reverse-charge-notice {
+      background: #fef2f2;
+      border: 1px solid #dc2626;
+      padding: 6px 10px;
+      font-size: 10px;
+      color: #dc2626;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* Certification Text */
+    .certification-text {
+      padding: 8px;
+      border-top: 2px solid #000;
+      text-align: center;
+      font-size: 10px;
+      font-weight: bold;
+      background: #f8fafc;
+    }
+
+    /* Signature Section */
+    .signature-table {
+      width: 100%;
+      border: 2px solid #000;
+      border-top: none;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .signature-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    .signature-table td + td {
+      border-left-width: 2px;
+    }
+
+    .signature-block {
+      display: flex;
+      flex-direction: column;
+      min-height: 110px;
+    }
+
+    .signature-label {
+      font-size: 9px;
+      margin-bottom: 4px;
+      text-align: left;
+      color: #334155;
+    }
+
+    .signature-space {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .signature-footer {
+      text-align: center;
+      font-weight: bold;
+      padding-top: 6px;
+      border-top: 1px solid #000;
+      font-size: 10px;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .page {
+        margin: 0;
+        padding: 10mm;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Interstate Supply Indicator Banner -->
+    <div class="interstate-banner">
+      <span>TAX INVOICE - INTERSTATE SUPPLY</span>
+      <span class="interstate-badge">IGST APPLICABLE</span>
+      <span>{{PAGE_TYPE}}</span>
+    </div>
+
+    <!-- Company Header -->
+    <div class="company-header">
+      <div class="company-name">{{COMPANY_NAME}}</div>
+    </div>
+
+    <!-- Company Details with QR Code -->
+    <div class="company-details">
+      <div class="company-info">
+        <div><span class="detail-value">{{COMPANY_ADDRESS}}</span></div>
+        <div><span class="detail-label">GSTIN:</span> <span class="detail-value">{{COMPANY_GSTIN}}</span></div>
+        <div><span class="detail-label">State:</span> <span class="detail-value">{{COMPANY_STATE}} ({{COMPANY_STATE_CODE}})</span></div>
+        {{COMPANY_CONTACT_INFO}}
+      </div>
+      <div class="company-qr">
+        <img alt="Invoice QR"
+          src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=Invoice%20No.%3A%20{{INVOICE_NUMBER}}%0ADate%3A%20{{INVOICE_DATE}}%0ASupplier%3A%20{{COMPANY_NAME}}%0ASupplier%20GSTIN%3A%20{{COMPANY_GSTIN}}%0ARecipient%3A%20{{RECEIVER_NAME}}%0ARecipient%20GSTIN%3A%20{{RECEIVER_GSTIN}}%0APlace%20of%20Supply%3A%20{{PLACE_OF_SUPPLY}}%0ATotal%20Qty%3A%20{{TOTAL_QUANTITY}}%0AIGST%3A%20{{TOTAL_IGST}}%0ATotal%3A%20{{GRAND_TOTAL}}%0AType%3A%20Interstate" />
+      </div>
+    </div>
+
+    <!-- Invoice Title Section -->
+    <div class="invoice-title-section">
+      <div class="invoice-title-left">TAX INVOICE</div>
+      <div class="invoice-title-right">
+        <div class="supply-type">INTERSTATE SUPPLY (IGST)</div>
+        <div>Under Section 31 of CGST Act, 2017</div>
+        <div>Original for Recipient</div>
+        <div>Duplicate for Supplier/Transporter</div>
+        <div>Triplicate for Supplier</div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="metadata-section">
+      <table class="metadata-table">
+        <tbody>
+          <tr>
+            <td class="metadata-label-cell">Invoice No.</td>
+            <td class="metadata-value-cell">{{INVOICE_NUMBER}}</td>
+            <td class="metadata-label-cell">Transport Mode</td>
+            <td class="metadata-value-cell">{{TRANSPORT_MODE}}</td>
+            <td class="metadata-label-cell">E-Way Bill No.</td>
+            <td class="metadata-value-cell">{{EWAY_BILL_NUMBER}}</td>
+            <td class="metadata-label-cell">Supplier State</td>
+            <td class="metadata-value-cell">{{COMPANY_STATE}}</td>
+          </tr>
+          <tr>
+            <td class="metadata-label-cell">Invoice Date</td>
+            <td class="metadata-value-cell">{{INVOICE_DATE}}</td>
+            <td class="metadata-label-cell">Vehicle No.</td>
+            <td class="metadata-value-cell">{{VEHICLE_NUMBER}}</td>
+            <td class="metadata-label-cell">Place of Supply</td>
+            <td class="metadata-value-cell">{{PLACE_OF_SUPPLY}}</td>
+            <td class="metadata-label-cell">State Code</td>
+            <td class="metadata-value-cell">{{COMPANY_STATE_CODE}}</td>
+          </tr>
+          <tr>
+            <td class="metadata-label-cell">Date of Supply</td>
+            <td class="metadata-value-cell">{{DATE_OF_SUPPLY}}</td>
+            <td class="metadata-label-cell">Transporter</td>
+            <td class="metadata-value-cell">{{TRANSPORTER_NAME}}</td>
+            <td class="metadata-label-cell">Challan No.</td>
+            <td class="metadata-value-cell">{{CHALLAN_NUMBER}}</td>
+            <td class="metadata-label-cell">Reverse Charge</td>
+            <td class="metadata-value-cell">{{REVERSE_CHARGE}}</td>
+          </tr>
+          <tr>
+            <td class="metadata-label-cell">L.R Number</td>
+            <td class="metadata-value-cell">{{LR_NUMBER}}</td>
+            <td class="metadata-label-cell">P.O Number</td>
+            <td class="metadata-value-cell">{{PO_NUMBER}}</td>
+            <td class="metadata-label-cell" colspan="2"></td>
+            <td class="metadata-label-cell" colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Party Details Section - Billed To / Shipped To -->
+    <table class="party-table">
+      <thead>
+        <tr>
+          <th>Details of Receiver / Buyer (Billed To)</th>
+          <th>Details of Consignee (Shipped To)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <table class="party-info-table">
+              <tbody>
+                <tr>
+                  <th>Name:</th>
+                  <td>{{RECEIVER_NAME}}</td>
+                </tr>
+                <tr>
+                  <th>Address:</th>
+                  <td>{{RECEIVER_ADDRESS}}</td>
+                </tr>
+                <tr>
+                  <th>GSTIN/UIN:</th>
+                  <td>{{RECEIVER_GSTIN}}</td>
+                </tr>
+                <tr>
+                  <th>State:</th>
+                  <td>{{RECEIVER_STATE}}</td>
+                </tr>
+                <tr>
+                  <th>State Code:</th>
+                  <td>{{RECEIVER_STATE_CODE}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+          <td>
+            <table class="party-info-table">
+              <tbody>
+                <tr>
+                  <th>Name:</th>
+                  <td>{{CONSIGNEE_NAME}}</td>
+                </tr>
+                <tr>
+                  <th>Address:</th>
+                  <td>{{CONSIGNEE_ADDRESS}}</td>
+                </tr>
+                <tr>
+                  <th>GSTIN/UIN:</th>
+                  <td>{{CONSIGNEE_GSTIN}}</td>
+                </tr>
+                <tr>
+                  <th>State:</th>
+                  <td>{{CONSIGNEE_STATE}}</td>
+                </tr>
+                <tr>
+                  <th>State Code:</th>
+                  <td>{{CONSIGNEE_STATE_CODE}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Items Table - IGST Only for Interstate Supply -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 4%;">Sr.<br>No.</th>
+          <th style="width: 26%;">Description of Goods/Services</th>
+          <th style="width: 8%;">HSN/<br>SAC</th>
+          <th style="width: 7%;">Qty</th>
+          <th style="width: 6%;">UOM</th>
+          <th style="width: 9%;">Rate (₹)</th>
+          <th style="width: 12%;">Taxable<br>Value (₹)</th>
+          <th style="width: 6%;">IGST<br>Rate %</th>
+          <th style="width: 10%;">IGST<br>Amount (₹)</th>
+          <th style="width: 12%;">Total<br>Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{INTERSTATE_ITEMS_ROWS}}
+        <tr class="total-row">
+          <td colspan="3" class="text-center"><strong style="font-size: 11px;">TOTAL</strong></td>
+          <td class="text-right"><strong>{{TOTAL_QUANTITY}}</strong></td>
+          <td></td>
+          <td></td>
+          <td class="text-right"><strong>{{TOTAL_TAXABLE_VALUE}}</strong></td>
+          <td></td>
+          <td class="text-right"><strong>{{TOTAL_IGST}}</strong></td>
+          <td class="text-right"><strong>{{GRAND_TOTAL}}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Summary Section -->
+    <table class="summary-table">
+      <tbody>
+        <tr>
+          <td class="summary-left-cell">
+            <div class="amount-words-section">Total Invoice Amount in Words</div>
+            <div class="amount-words-value">{{AMOUNT_IN_WORDS}}</div>
+            <div class="terms-section">Terms and Conditions</div>
+            <div class="terms-content">
+              {{TERMS_AND_CONDITIONS}}
+            </div>
+          </td>
+          <td class="summary-right-cell">
+            <table class="tax-summary-table">
+              <tbody>
+                <tr>
+                  <td>Total Taxable Value:</td>
+                  <td>₹ {{TOTAL_TAXABLE_VALUE}}</td>
+                </tr>
+                <tr>
+                  <td>Add: IGST (Interstate Tax):</td>
+                  <td>₹ {{TOTAL_IGST}}</td>
+                </tr>
+                <tr>
+                  <td>Add: Compensation Cess:</td>
+                  <td>₹ 0.00</td>
+                </tr>
+                <tr>
+                  <td>Round Off:</td>
+                  <td>₹ 0.00</td>
+                </tr>
+                <tr class="grand-total-row">
+                  <td>Grand Total:</td>
+                  <td>₹ {{GRAND_TOTAL}}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="certification-text">
+              Certified that the particulars given above are true and correct.<br>
+              <span style="color: #334155; font-weight: bold;">This is an Interstate Supply - IGST Applicable</span><br>
+              <span style="font-size: 9px; font-weight: normal;">Recipient eligible to claim Input Tax Credit (ITC) on IGST paid.</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Signature Section -->
+    <table class="signature-table">
+      <tbody>
+        <tr>
+          <td>
+            <div class="signature-block">
+              <div class="signature-label">Mobile No: _____________</div>
+              <div class="signature-space"></div>
+              <div class="signature-footer">Receiver's Signature</div>
+            </div>
+          </td>
+          <td>
+            <div class="signature-block">
+              <div class="signature-label">For {{COMPANY_NAME}}</div>
+              <div class="signature-space"></div>
+              <div class="signature-footer">Authorized Signatory</div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
