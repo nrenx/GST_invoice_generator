@@ -23,6 +23,7 @@ export const PROFILE_PINS: Record<string, string> = {
   narendra: '9640',
   raja: '2018',
   simhadri: '6303',
+  nageswarao: '9640',
 };
 
 export const DEFAULT_PROFILES: Profile[] = [
@@ -73,5 +74,21 @@ export const DEFAULT_PROFILES: Profile[] = [
       phone: ''
     },
     termsAndConditions: '1. This is an electronically generated invoice.\n2. All disputes are subject to Venkatagiri jurisdiction only.\n3. Goods once sold will not be taken back or exchanged.\n4. Payment shall be made as agreed; ownership passes only after full payment.\n5. This invoice is issued in accordance with GST laws in force in India.'
+  },
+  {
+    id: 'nageswarao',
+    name: 'Nageswarao',
+    companyDetails: {
+      companyName: 'PARAMESWARA TRADERS',
+      address: '1-36-1-C,MannetiKota,Ulavapadu,Nellore Dist,A.P',
+      city: 'Ulavapadu',
+      state: 'Andhra Pradesh',
+      stateCode: '37',
+      pincode: '523292',
+      gstin: '37CTLPG5883R1ZK',
+      email: 'gaddaguntanageswarao@gmail.com',
+      phone: ''
+    },
+    termsAndConditions: '1. This is an electronically generated invoice.\n2. All disputes are subject to Ulavapadu jurisdiction only.\n3. Goods once sold will not be taken back or exchanged.\n4. Payment shall be made as agreed; ownership passes only after full payment.\n5. This invoice is issued in accordance with GST laws in force in India.'
   }
 ];
