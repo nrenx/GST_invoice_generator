@@ -105,7 +105,7 @@ export const buildBaseDefaults = (profile?: Profile): InvoiceFormData => {
     companyPhone: profile?.companyDetails.phone || "",
     companyState: profile?.companyDetails.state || "Andhra Pradesh",
     companyStateCode: profile?.companyDetails.stateCode || "37",
-    invoiceNumber: "INV-2025-12",
+    invoiceNumber: "INV-001",
     invoiceDate: today,
     invoiceType: "Tax Invoice",
     saleType: "Interstate",

@@ -38,7 +38,7 @@ export const InvoiceMetadataSection = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="invoiceNumber">Invoice Number *</Label>
-            <Input {...register("invoiceNumber")} id="invoiceNumber" placeholder="INV-2025-001" />
+            <Input {...register("invoiceNumber")} id="invoiceNumber" placeholder="INV-001" />
             {errors.invoiceNumber && (
               <p className="text-sm text-destructive mt-1">{errors.invoiceNumber.message}</p>
             )}
